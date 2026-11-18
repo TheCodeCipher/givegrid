@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiveGrid — Donation</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">GiveGrid</span>
+    <span id="who" class="muted"></span>
+    <button id="logout" class="secondary">Log out</button>
+  </header>
+
+  <main class="page">
+    <p><a id="back" href="index.html">← Back to dashboard</a></p>
+    <div id="details"><p class="muted">Loading…</p></div>
+
+    <!-- Only for the donor who owns this donation -->
+    <section id="owner-area" class="hidden">
+      <form id="edit-form" class="card">
+        <h2>Edit</h2>
+        <label>Title <input name="title" id="edit-title" required></label>
+        <label>Description <textarea name="description" id="edit-description" rows="2"></textarea></label>
+        <button type="submit">Save</button>
+        <button type="button" id="close-button" class="danger">Close to new claims</button>
+        <p id="edit-message"></p>
+      </form>
+      <h2>NGOs that need this most</h2>
+      <p class="muted">Score: urgency (+30 high, +15 medium) + covers their whole need (+30) + nearby (+20 / +10).</p>
+      <div id="best-needs"></div>
+    </section>
+
+    <h2>History</h2>
+    <p class="muted">Every step is recorded and can never be changed or deleted.</p>
+    <div id="history"></div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/donation.js"></script>
+</body>
+</html>

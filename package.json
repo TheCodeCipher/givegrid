@@ -1,0 +1,30 @@
+{
+  "name": "givegrid",
+  "version": "2.0.0",
+  "description": "GiveGrid: donors list usable goods, verified NGOs claim exactly what they need",
+  "main": "backend/server.js",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "seed": "node scripts/seed.js",
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 60000,
+    "coveragePathIgnorePatterns": ["/node_modules/", "/tests/"]
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.0",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.14.0"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0",
+    "supertest": "^7.1.0"
+  }
+}

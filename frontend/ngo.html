@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiveGrid — NGO</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">GiveGrid</span>
+    <span id="who" class="muted"></span>
+    <button id="logout" class="secondary">Log out</button>
+  </header>
+
+  <main class="page">
+    <h1>NGO dashboard</h1>
+    <div id="profile"><p class="muted">Loading…</p></div>
+
+    <!-- Shown only when the NGO has no profile yet -->
+    <form id="ngo-form" class="card hidden">
+      <h2>Register your NGO</h2>
+      <p class="muted">An administrator checks every NGO before it can post needs or claim donations.</p>
+      <label>NGO name <input name="name" required></label>
+      <div class="row">
+        <label>City <input name="city" required></label>
+        <label>Area / locality <input name="locality"></label>
+      </div>
+      <button type="submit">Send for verification</button>
+      <p id="ngo-message"></p>
+    </form>
+
+    <!-- Shown only when the NGO is VERIFIED -->
+    <section id="verified-area" class="hidden">
+      <h2>My claims</h2>
+      <p class="muted">Confirm your pickup plan within 48 hours, or the items are released for others.</p>
+      <div id="claims"></div>
+      <p id="claim-message"></p>
+
+      <h2>My needs</h2>
+      <div id="needs"></div>
+
+      <form id="need-form" class="card">
+        <h2>Post a new need</h2>
+        <label>What do you need? <input name="title" required></label>
+        <label>Category <select name="category_id" id="category" required></select></label>
+        <div class="row">
+          <label>Quantity <input type="number" name="quantity_required" min="1" step="1" required></label>
+          <label>Unit (e.g. chairs) <input name="unit" required></label>
+          <label>Urgency
+            <select name="urgency">
+              <option value="HIGH">High</option>
+              <option value="MEDIUM" selected>Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <label>City <input name="city" required></label>
+          <label>Area / locality <input name="locality"></label>
+        </div>
+        <button type="submit">Post need</button>
+        <p id="need-message"></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/ngo.js"></script>
+</body>
+</html>

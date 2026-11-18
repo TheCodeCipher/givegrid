@@ -1,0 +1,76 @@
+/* style.css — the only stylesheet. Plain CSS, no framework. */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, Arial, sans-serif;
+  line-height: 1.5;
+  color: #1f2933;
+  background: #f4f6f8;
+}
+
+/* ---- top bar (flexbox: items in a row) ---- */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border-bottom: 1px solid #d9dee5;
+}
+.brand { font-weight: bold; font-size: 1.2rem; color: #0f766e; margin-right: auto; }
+
+.page { max-width: 960px; margin: 0 auto; padding: 1rem; }
+h1 { font-size: 1.6rem; margin: 0.5rem 0; }
+h2 { font-size: 1.2rem; margin: 1.5rem 0 0.5rem; }
+a { color: #0b5650; }
+
+/* ---- text states: loading / empty / error / success ---- */
+.lead { font-size: 1.1rem; }
+.muted { color: #5f6b7a; font-size: 0.9rem; }
+.empty { color: #5f6b7a; background: #fff; border: 1px dashed #c5ccd6; padding: 1rem; text-align: center; border-radius: 6px; }
+.error { color: #b42318; background: #fdecea; padding: 0.5rem 0.75rem; border-radius: 6px; }
+.success { color: #17643c; background: #e7f6ee; padding: 0.5rem 0.75rem; border-radius: 6px; }
+.notice { background: #fff7e0; padding: 0.5rem 0.75rem; border-radius: 6px; }
+.hidden { display: none; }
+
+/* ---- cards and forms ---- */
+.card { background: #fff; border: 1px solid #d9dee5; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+.card h2 { margin-top: 0; }
+form.card { display: flex; flex-direction: column; gap: 0.75rem; max-width: 560px; }
+label { display: flex; flex-direction: column; gap: 0.25rem; font-weight: 600; font-size: 0.9rem; flex: 1; }
+label.inline { flex-direction: row; align-items: center; gap: 0.5rem; }
+input, select, textarea { font: inherit; padding: 0.45rem; border: 1px solid #b6bec9; border-radius: 6px; }
+.row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+/* GRID: login and register side by side on wide screens, stacked on phones. */
+.two-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+
+/* ---- buttons ---- */
+button { font: inherit; font-weight: 600; cursor: pointer; padding: 0.4rem 0.8rem; border-radius: 6px;
+         border: 1px solid #0f766e; background: #0f766e; color: #fff; }
+button:hover { background: #0b5650; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.secondary { background: #fff; color: #0b5650; }
+button.danger { background: #fff; color: #b42318; border-color: #b42318; }
+
+/* ---- tables ---- */
+table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #d9dee5; }
+th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid #e5e9ee; vertical-align: top; }
+th { font-size: 0.8rem; text-transform: uppercase; color: #5f6b7a; }
+
+/* ---- status badges ---- */
+.badge { display: inline-block; padding: 0.05rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: bold; background: #e6e9ee; }
+.badge-high, .badge-rejected, .badge-cancelled, .badge-expired, .badge-closed { background: #fdecea; color: #b42318; }
+.badge-medium, .badge-pending, .badge-held { background: #fff7e0; color: #7a5600; }
+.badge-verified, .badge-open, .badge-confirmed, .badge-picked_up, .badge-delivered, .badge-received { background: #e7f6ee; color: #17643c; }
+
+.offer { background: #fff7e0; border: 1px solid #ecd58a; border-radius: 6px; padding: 0.75rem; }
+.stock { font-size: 1.15rem; }
+
+/* PHONES: tables scroll sideways instead of breaking the page. */
+@media (max-width: 600px) {
+  table { display: block; overflow-x: auto; }
+  .topbar { flex-wrap: wrap; }
+}

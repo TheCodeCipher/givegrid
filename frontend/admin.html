@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiveGrid — Admin</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">GiveGrid</span>
+    <span id="who" class="muted"></span>
+    <button id="logout" class="secondary">Log out</button>
+  </header>
+
+  <main class="page">
+    <h1>NGO verification</h1>
+    <label class="inline">Show
+      <select id="filter">
+        <option value="PENDING">Pending</option>
+        <option value="VERIFIED">Verified</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </label>
+    <div id="ngos"></div>
+    <p id="message"></p>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiveGrid — Donor</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">GiveGrid</span>
+    <span id="who" class="muted"></span>
+    <button id="logout" class="secondary">Log out</button>
+  </header>
+
+  <main class="page">
+    <h1>Donor dashboard</h1>
+
+    <h2>Claims on my donations</h2>
+    <p class="muted">When an NGO has confirmed a claim and collected the items, press “Record pickup”.</p>
+    <div id="claims"></div>
+    <p id="claim-message"></p>
+
+    <h2>My donations</h2>
+    <div id="donations"></div>
+
+    <form id="donation-form" class="card">
+      <h2>List a new donation</h2>
+      <label>Title <input name="title" required></label>
+      <label>Description <textarea name="description" rows="2"></textarea></label>
+      <label>Category <select name="category_id" id="category" required></select></label>
+      <div class="row">
+        <label>Quantity <input type="number" name="total_quantity" min="1" step="1" required></label>
+        <label>Unit (e.g. chairs) <input name="unit" required></label>
+      </div>
+      <div class="row">
+        <label>City <input name="city" required></label>
+        <label>Area / locality <input name="locality"></label>
+      </div>
+      <button type="submit">List donation</button>
+      <p id="form-message"></p>
+    </form>
+
+    <h2>What NGOs need right now</h2>
+    <div id="needs"></div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/donor.js"></script>
+</body>
+</html>

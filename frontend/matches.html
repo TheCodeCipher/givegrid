@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiveGrid — Matches</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">GiveGrid</span>
+    <span id="who" class="muted"></span>
+    <button id="logout" class="secondary">Log out</button>
+  </header>
+
+  <main class="page">
+    <p><a href="ngo.html">← Back to dashboard</a></p>
+    <h1>Donations for your need</h1>
+    <div id="need"></div>
+    <p class="muted">Score: +30 if it covers everything you still need, +20 same area, +10 same city.
+      Only the same category and unit are listed.</p>
+    <div id="matches"></div>
+
+    <!-- Shown after "Claim" is pressed on a row -->
+    <form id="claim-form" class="card hidden">
+      <h2>Claim: <span id="claim-title"></span></h2>
+      <label>How many? <input type="number" id="claim-quantity" min="1" step="1" required></label>
+      <button type="submit">Claim</button>
+      <div id="offer" class="offer hidden"></div>
+      <p id="claim-message"></p>
+    </form>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/matches.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiveGrid — Log in</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar"><span class="brand">GiveGrid</span></header>
+
+  <main class="page">
+    <h1>GiveGrid</h1>
+    <p class="lead">Connecting available resources with verified community needs.</p>
+    <p class="muted" id="server-status">Checking the server…</p>
+
+    <div class="two-columns">
+      <form id="login-form" class="card">
+        <h2>Log in</h2>
+        <label>Email <input type="email" name="email" required></label>
+        <label>Password <input type="password" name="password" required></label>
+        <button type="submit">Log in</button>
+        <p id="login-message"></p>
+      </form>
+
+      <form id="register-form" class="card">
+        <h2>Create an account</h2>
+        <label>Your name <input name="name" required></label>
+        <label>Email <input type="email" name="email" required></label>
+        <label>Password (8+ characters) <input type="password" name="password" minlength="8" required></label>
+        <label>I am
+          <select name="role">
+            <option value="DONOR">a donor (I have goods to give)</option>
+            <option value="NGO">an NGO (we need goods)</option>
+          </select>
+        </label>
+        <button type="submit">Register</button>
+        <p id="register-message"></p>
+      </form>
+    </div>
+
+    <p class="muted">Demo accounts after <code>npm run seed</code> (password <code>password123</code>):
+      donor@givegrid.local · ngo@givegrid.local · admin@givegrid.local</p>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/index.js"></script>
+</body>
+</html>
