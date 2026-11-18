@@ -9,7 +9,7 @@ Donors (people, offices, hotels, event organisers) list usable goods they no lon
 NGOs post what they need. An admin verifies each NGO. Verified NGOs see ranked matches and
 claim exactly the quantity they can use. One donation can be split between several NGOs.
 
-## The hard requirement (all three kinds from the course guide)
+## The hard requirements
 
 > **If two NGOs claim the same donation at the same moment, a naive version would let both
 > succeed and promise more items than the donor has.**
@@ -27,7 +27,7 @@ and the server checks the stock again.
 **48-hour holds.** A claim is held for 48 hours. If the NGO does not confirm a pickup plan in time,
 a timer releases the items, exactly once.
 
-## Stack (only what the course taught)
+## Stack 
 
 HTML · CSS · JavaScript (no framework) · Node.js · Express 4 · MySQL 8 (`mysql2`) · bcrypt · JWT ·
 Jest + Supertest · Postman · Git. MongoDB is not used, because the course guide says
