@@ -1,5 +1,5 @@
 # GiveGrid
-GiveGrid is a web app connecting donolrs with verified NGOs to match usable physical goods with actual resource needs. 
+GiveGrid is a web app connecting donors with verified NGOs to match usable physical goods with actual resource needs. 
 It lets donors list items and NGOs post specific requests. The platform discovers matches and manages the complete donation workflow - from claiming to handover - ensuring useful resources reach the organisations that need them. 
 
 **Connecting available resources with verified community needs.**
@@ -35,7 +35,7 @@ Jest + Supertest · Postman · Git. MongoDB is not used, because the course guid
 
 ## Run it
 
-Needs Node.js 18+ and MySQL 8 **or** MariaDB 10.5+. All 115 tests were run and passed on both MySQL 8.0.46 and MariaDB 10.11 (Node 22).
+Needs Node.js 18+ and MySQL 8 **or** MariaDB 10.5+. All tests were run and passed on both MySQL 8.0.46 and MariaDB 10.11 (Node 22).
 
 ```text
 1. npm install
@@ -43,7 +43,7 @@ Needs Node.js 18+ and MySQL 8 **or** MariaDB 10.5+. All 115 tests were run and p
 3. npm run setup     creates the two databases, all tables, and the limited app account
 4. npm run seed      loads demo accounts and 10,272 rows
 5. npm start         open http://localhost:3000
-6. npm test          runs all 115 tests (uses the separate givegrid_test database)
+6. npm test          runs all 120 tests (uses the separate givegrid_test database)
 ```
 
 Demo logins (password `password123`): `donor@givegrid.local`, `ngo@givegrid.local`,
@@ -58,8 +58,8 @@ backend/        the server (Express + MySQL)       -> docs/3-BACKEND.md
 database/       schema.sql: every table and rule   -> docs/2-DATABASE.md
 scripts/        setup.js (build database), seed.js (demo data)
 frontend/       plain HTML/CSS/JS pages             -> docs/5-FRONTEND.md
-tests/          7 kinds of tests, 115 tests         -> docs/4-TESTS.md
-docs/           guides written for the team, plus the Postman collection
+tests/          7 kinds of tests, 120 tests         -> docs/4-TESTS.md
+docs/           guides written for the team, the viva survival guide, plus the Postman collection
 ```
 
 ## API
@@ -91,7 +91,7 @@ Status codes: `200` OK · `201` created · `400` bad input · `401` not logged i
 
 ## Results
 
-- **115 tests pass** (unit, smoke, functional, security, database, concurrency, performance). Coverage 92% of lines.
+- **120 tests pass** (unit, smoke, functional, security, database, concurrency, performance). Coverage 92% of lines.
 - Removing `FOR UPDATE` from the claim makes **5 of the 9 concurrency tests fail**, so the tests really detect the race.
 - With the locks, the concurrency tests passed **10 runs out of 10**.
 - **10,272 rows** seeded. Every measured request replied in a few milliseconds. Indexes checked with `EXPLAIN`.

@@ -108,6 +108,12 @@ describe('validate (checking input from outside)', () => {
     expect(() => validate.email('not-an-email')).toThrow('not a valid email');
   });
 
+  test('password must be 8 to 72 characters (bcrypt ignores anything after 72 bytes)', () => {
+    expect(validate.password('password123')).toBe('password123');
+    expect(() => validate.password('short')).toThrow('8 to 72');
+    expect(() => validate.password('x'.repeat(73))).toThrow('8 to 72');
+  });
+
   test('a thrown validation error carries status 400', () => {
     try {
       validate.quantity(0, 'quantity');

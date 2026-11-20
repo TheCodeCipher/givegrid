@@ -69,9 +69,11 @@ function email(value) {
   return clean;
 }
 
+// bcrypt only uses the first 72 bytes of a password. Longer passwords would be
+// silently cut, so two different long passwords could match. We refuse them instead.
 function password(value) {
-  if (typeof value !== 'string' || value.length < 8) {
-    throw bad('password must be at least 8 characters');
+  if (typeof value !== 'string' || value.length < 8 || value.length > 72) {
+    throw bad('password must be 8 to 72 characters');
   }
   return value;
 }

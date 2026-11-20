@@ -13,10 +13,10 @@ the middle, few **end-to-end** tests on top.
 
 | File | Kind | Checks, in one line | Count |
 |---|---|---|---|
-| `1-unit.test.js` | **Unit** | one small function alone, no server, no database (`rules.js`, `validate.js`) | 26 |
+| `1-unit.test.js` | **Unit** | one small function alone, no server, no database (`rules.js`, `validate.js`) | 27 |
 | `2-smoke.test.js` | **Smoke** | is it alive at all? server answers, database connected, website served | 5 |
 | `3-functional.test.js` | **Functional / integration** | each feature works as a user expects, through the real API to the real database | 25 |
-| `4-security.test.js` | **Security** | attacks are refused: no login, fake token, wrong role, someone else's data, bad input, SQL injection | 25 |
+| `4-security.test.js` | **Security** | attacks are refused: no login, fake token, wrong role, someone else's data, bad input, SQL injection, password guessing, oversized bodies; security headers present | 29 |
 | `5-database.test.js` | **Database / integrity** | MySQL itself refuses bad data, refuses to change history, undoes half-finished work | 17 |
 | `6-concurrency.test.js` | **Concurrency (race)** | the hard requirement: many requests at the same instant still give correct results | 9 |
 | `7-performance.test.js` | **Performance** | with 10,000+ rows, requests stay fast and use our indexes | 8 |
@@ -149,7 +149,7 @@ Read it as: *which test* (the ● line) → *what was expected vs what happened*
 
 ```text
 
-tests/1-unit.test.js  (26)
+tests/1-unit.test.js  (27)
   ✓ decideClaim (what to do with a claim) › enough stock and enough need -> RESERVE
   ✓ decideClaim (what to do with a claim) › asking for more than is free -> COUNTER with what is free
   ✓ decideClaim (what to do with a claim) › the offer is also limited by what the NGO still needs
@@ -175,6 +175,7 @@ tests/1-unit.test.js  (26)
   ✓ validate (checking input from outside) › oneOf only allows listed values
   ✓ validate (checking input from outside) › id accepts "12" from a URL and rejects "abc" or 0
   ✓ validate (checking input from outside) › email is lowercased and must look like an email
+  ✓ validate (checking input from outside) › password must be 8 to 72 characters (bcrypt ignores anything after 72 bytes)
   ✓ validate (checking input from outside) › a thrown validation error carries status 400
 
 tests/2-smoke.test.js  (5)
@@ -211,7 +212,7 @@ tests/3-functional.test.js  (25)
   ✓ 48-hour expiry › the expiry shows in the history as done by GiveGrid (no person)
   ✓ my claims list › each person sees only the claims they are part of
 
-tests/4-security.test.js  (25)
+tests/4-security.test.js  (29)
   ✓ who are you? (authentication -> 401) › no token at all is refused
   ✓ who are you? (authentication -> 401) › a token signed with the wrong secret (a forged ADMIN token) is refused
   ✓ who are you? (authentication -> 401) › an expired token is refused
@@ -237,6 +238,10 @@ tests/4-security.test.js  (25)
   ✓ attacks on the data › SQL injection in a text field is saved as plain text
   ✓ attacks on the data › the password hash never appears in any reply
   ✓ attacks on the data › a server error returns a plain message, never SQL or a stack trace
+  ✓ extra protection layers › every reply carries the security headers, and does not say "Express"
+  ✓ extra protection layers › after 5 wrong passwords, login is blocked with 429 (even with the right password)
+  ✓ extra protection layers › the block is only for that email: other accounts can still log in
+  ✓ extra protection layers › a body bigger than 10 kB is refused with 413
 
 tests/5-database.test.js  (17)
   ✓ the schema › all 7 tables exist
@@ -278,5 +283,5 @@ tests/7-performance.test.js  (8)
   ✓ matching uses the idx_donations_match index (not a full table scan)
   ✓ the expiry check uses the idx_alloc_expiry index
 
-Tests: 115 passed of 115
+Tests: 120 passed of 120
 ```

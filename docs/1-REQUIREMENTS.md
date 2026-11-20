@@ -44,7 +44,7 @@ requirement, where it is, and what proves it.
 | "Postman: we will use it on your submission" | `docs/GiveGrid.postman_collection.json` |
 | "Git and GitHub: part of the assessment" | your repository history |
 | ".env: keeping secrets out of the repository" | `.env` in `.gitignore`, `.env.example` committed |
-| Optional bonus: "Jest or Vitest: automated tests, **4 bonus marks**" | 115 Jest + Supertest tests |
+| Optional bonus: "Jest or Vitest: automated tests, **4 bonus marks**" | 120 Jest + Supertest tests |
 | "NoSQL databases: explicitly disallowed" | MySQL only |
 | "Plain HTML, CSS and JavaScript are permitted instead of React... lose no marks" | our frontend |
 | "AI assistants: permitted — but you must be able to explain every line you submit" | this whole `docs/` folder |

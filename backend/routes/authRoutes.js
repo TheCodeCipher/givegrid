@@ -2,7 +2,7 @@
 // routes/authRoutes.js — mounted at /api/auth  (see app.js)
 // =====================================================================
 //   POST /api/auth/register   create an account, get a token
-//   POST /api/auth/login      log in, get a token
+//   POST /api/auth/login      log in, get a token (5 wrong passwords -> 429 for 15 min)
 //   GET  /api/auth/me         who am I? (needs a token)
 // =====================================================================
 
@@ -12,6 +12,7 @@ const { pool } = require('../db');
 const { HttpError, asyncHandler } = require('../errors');
 const { makeToken, authenticate } = require('../auth');
 const validate = require('../validate');
+const security = require('../security');
 
 const router = express.Router();
 
@@ -48,6 +49,12 @@ router.post('/login', asyncHandler(async (req, res) => {
     throw new HttpError(400, 'password is required');
   }
 
+  // Too many wrong passwords for this email from this computer? Refuse for now.
+  const limitKey = `${req.ip}|${email}`;
+  if (security.isBlocked(limitKey)) {
+    throw new HttpError(429, 'Too many failed logins. Try again in 15 minutes');
+  }
+
   const [rows] = await pool.query(
     'SELECT id, name, email, role, password_hash FROM users WHERE email = ?',
     [email]
@@ -57,8 +64,10 @@ router.post('/login', asyncHandler(async (req, res) => {
   // SAME message for "no such email" and "wrong password", so an attacker
   // cannot find out which emails have accounts (user enumeration).
   if (!found || !(await bcrypt.compare(req.body.password, found.password_hash))) {
+    security.recordFailure(limitKey);
     throw new HttpError(401, 'Wrong email or password');
   }
+  security.clearFailures(limitKey);               // correct password: start counting from 0 again
 
   // Build the reply WITHOUT password_hash.
   const user = { id: found.id, name: found.name, email: found.email, role: found.role };

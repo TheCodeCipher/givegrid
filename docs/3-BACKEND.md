@@ -67,7 +67,8 @@ file because each handler is only a few lines.
   called `listen`, every test file would try to grab port 3000 and the tests would clash and not exit.
 
 **Middleware order in `app.js` (order matters: first match wins):**
-1. `express.json()`: reads JSON bodies into `req.body`. Broken JSON → error handler → 400.
+0. `app.disable('x-powered-by')` and `securityHeaders`: safety headers on every reply (`security.js`).
+1. `express.json({ limit: '10kb' })`: reads JSON bodies into `req.body`. Broken JSON → error handler → 400.
 2. `express.static('frontend')`: if the URL is a file in `frontend/` (e.g. `/donor.html`), send it.
    Same server for pages and API = same origin, so the browser needs **no CORS** setup.
 3. `/api/health`, `/api/health/db`, `/api/categories`: three tiny public routes.
@@ -117,7 +118,7 @@ variables exist and throws a clear message if not. `isTest` is true when Jest ru
 ## 4. Login: bcrypt, JWT, authenticate, authorise (`auth.js`, `routes/authRoutes.js`)
 
 **Register** (`POST /api/auth/register`):
-1. Validate name, email, password (8+), role (only DONOR or NGO; nobody can self-register as ADMIN).
+1. Validate name, email, password (8 to 72 characters; bcrypt ignores bytes after 72), role (only DONOR or NGO; nobody can self-register as ADMIN).
 2. `bcrypt.hash(password, 10)`: a **one-way** hash with a random **salt**. 10 is the cost factor (2^10
    rounds, slow on purpose so guessing millions of passwords is too slow). Same password → different
    hash each time because of the salt.
@@ -264,7 +265,7 @@ INSERT INTO donation_events (donation_id, seq, action, quantity, actor_id, alloc
 | Method + path | Middleware | Does | Replies |
 |---|---|---|---|
 | POST `/register` | – | validate, bcrypt.hash, INSERT user | 201 `{token, user}` · 400 · 409 duplicate email |
-| POST `/login` | – | SELECT by email, bcrypt.compare | 200 `{token, user}` · 400 · 401 |
+| POST `/login` | – | login limiter check, SELECT by email, bcrypt.compare | 200 `{token, user}` · 400 · 401 · 429 after 5 wrong passwords |
 | GET `/me` | authenticate | SELECT id, name, email, role | 200 · 401 |
 
 ### `routes/ngoRoutes.js` → `/api/ngos` (whole file: authenticate, authorise('NGO'))
@@ -354,5 +355,10 @@ ORDER BY score DESC, d.available_quantity DESC, d.id LIMIT 50
 | XSS (script in a title) | the frontend escapes all text with `esc()` | frontend/js/common.js |
 | CORS | not needed: frontend and API on the same origin | app.js |
 
-**Not added (say so honestly):** `helmet` security headers and rate limiting (429). Both were in the
-notes; we left them out to keep dependencies minimal. Adding them is about 3 lines each.
+| Clickjacking, scripts from other sites, file-type guessing | security headers (X-Frame-Options, CSP, nosniff), `X-Powered-By` hidden | `backend/security.js`, app.js |
+| Password guessing (brute force) | 5 wrong passwords for one email from one IP → 429 for 15 minutes | `security.js`, authRoutes |
+| Huge request bodies | `express.json({ limit: '10kb' })` → 413 | app.js |
+
+The headers and the login limiter are written by hand (about 30 lines) instead of using the `helmet`
+and `express-rate-limit` packages, so every line can be explained. Full numbered list of all 14 layers:
+`docs/8-VIVA-SURVIVAL.md` §5.

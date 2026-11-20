@@ -5,21 +5,30 @@
 // send requests to it directly, without starting a real server.
 //
 // A request passes through these in ORDER (top to bottom):
-//   1. express.json()   turns the JSON body into req.body
-//   2. express.static   serves the frontend files (HTML/CSS/JS)
-//   3. the API routes   /api/...
-//   4. 404 handler      no route matched
-//   5. error handler    anything that went wrong (4 arguments = error handler)
+//   1. securityHeaders  adds safety headers to every reply
+//   2. express.json()   turns the JSON body into req.body (max 10 kB)
+//   3. express.static   serves the frontend files (HTML/CSS/JS)
+//   4. the API routes   /api/...
+//   5. 404 handler      no route matched
+//   6. error handler    anything that went wrong (4 arguments = error handler)
 // =====================================================================
 
 const path = require('path');
 const express = require('express');
 const { pool } = require('./db');
 const { HttpError, asyncHandler } = require('./errors');
+const { securityHeaders } = require('./security');
 
 const app = express();
 
-app.use(express.json());
+// Don't advertise "X-Powered-By: Express" (tells attackers what to target).
+app.disable('x-powered-by');
+
+// Security headers on every reply (see security.js).
+app.use(securityHeaders);
+
+// Bodies larger than 10 kB are refused (413). Stops someone sending a huge body to tie up the server.
+app.use(express.json({ limit: '10kb' }));
 
 // The frontend is served by this same server, so the browser and the API
 // share one origin (http://localhost:3000). That is why we need no CORS setup.
@@ -67,6 +76,10 @@ app.use((err, req, res, next) => {
   // express.json() could not read the body.
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'Request body is not valid JSON' });
+  }
+  // The body was bigger than the 10 kB limit.
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Request body is too large' });
   }
   // Anything else is a real bug. Log it for us, but NEVER send SQL or a
   // stack trace to the client (it would help an attacker).

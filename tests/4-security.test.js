@@ -205,3 +205,40 @@ describe('attacks on the data', () => {
     quiet.mockRestore();
   });
 });
+
+describe('extra protection layers', () => {
+  test('every reply carries the security headers, and does not say "Express"', async () => {
+    for (const url of ['/api/health', '/']) {
+      const res = await h.request(h.app).get(url);
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
+      expect(res.headers['x-frame-options']).toBe('DENY');
+      expect(res.headers['content-security-policy']).toContain("default-src 'self'");
+      expect(res.headers['x-powered-by']).toBeUndefined();
+    }
+  });
+
+  test('after 5 wrong passwords, login is blocked with 429 (even with the right password)', async () => {
+    const account = { name: 'B', email: 'brute@test.local', password: 'password123', role: 'DONOR' };
+    await h.request(h.app).post('/api/auth/register').send(account);
+
+    for (let i = 0; i < 5; i++) {
+      const wrong = await h.request(h.app).post('/api/auth/login').send({ email: account.email, password: 'guess-' + i });
+      expect(wrong.status).toBe(401);
+    }
+    const blocked = await h.request(h.app).post('/api/auth/login').send({ email: account.email, password: account.password });
+    expect(blocked.status).toBe(429);
+  });
+
+  test('the block is only for that email: other accounts can still log in', async () => {
+    const other = { name: 'C', email: 'innocent@test.local', password: 'password123', role: 'DONOR' };
+    await h.request(h.app).post('/api/auth/register').send(other);
+    const res = await h.request(h.app).post('/api/auth/login').send({ email: other.email, password: other.password });
+    expect(res.status).toBe(200);
+  });
+
+  test('a body bigger than 10 kB is refused with 413', async () => {
+    const donor = await h.makeUser('DONOR');
+    const res = await h.post('/api/donations', donor, { title: 'x'.repeat(20000) });
+    expect(res.status).toBe(413);
+  });
+});
