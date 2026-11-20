@@ -1,4 +1,4 @@
-# The database, explained
+# Database
 
 File: `database/schema.sql`. Created by `npm run setup`. MySQL 8, InnoDB engine.
 
@@ -95,8 +95,7 @@ HELD ──confirm──> CONFIRMED ──pickup──> PICKED_UP ──deliver�
 
 Each one is tested in `tests/5-database.test.js` by inserting bad data with plain SQL.
 
-**Common viva trap:** "If you have CHECK `available >= 0`, why do you need locks?" Because the CHECK
-only stops the number going **negative**. Without locks, two claims of 30 on 30 available could both
+**Why locks are still needed alongside the CHECK.** The CHECK only stops the number going **negative**. Without locks, two claims of 30 on 30 available could both
 read 30 and both write 0: no negative number, but 60 promised from 30. The CHECK can't see the
 other claim. The lock is what serialises them; the CHECK is a backup.
 
@@ -124,7 +123,7 @@ As root, the trigger still says no:
 ERROR 1644 (45000): donation_events is append-only: DELETE is not allowed
 ```
 
-**Honest limits (say these if asked):**
+**Limits:**
 - `TRUNCATE` doesn't fire triggers (it wipes the table without deleting rows one by one). Only
   privileges stop it. Root can still truncate, which is how the tests reset the database.
 - Root can also `DROP TRIGGER`. Nothing stops an administrator; that's why the app never uses root.
@@ -145,7 +144,7 @@ column. So `donor_id`, `ngo_id`, `donation_id`, `need_id` are already indexed.
 
 | Index | Query it serves | EXPLAIN without → with |
 |---|---|---|
-| `idx_alloc_expiry (status, expires_at)` | expiry timer: `WHERE status='HELD' AND expires_at <= NOW()` | `type ALL, rows 601` → `type range, rows 1, key idx_alloc_expiry` |
+| `idx_alloc_expiry (status, expires_at)` | expiry timer: `WHERE status='HELD' AND expires_at <= NOW()` | `type ALL`, all 600 claims read → `type range, rows 1, key idx_alloc_expiry` |
 | `idx_donations_match (category_id, unit)` | matching: donations with the need's category and unit | `key idx_donations_match, rows 227` of 2,500. It also serves the `category_id` foreign key; adding `unit` lets MySQL skip same-category donations in another unit |
 | `idx_needs_match (category_id, unit)` | matching the other way | same idea |
 
@@ -156,7 +155,7 @@ How to read EXPLAIN: **`key`** = the index used (NULL = none). **`type`**: `ALL`
 narrow anything, and EXPLAIN showed MySQL ignored it. An index only helps if the column
 separates rows well.
 
-**Fun fact if asked:** MySQL refused to drop `idx_donations_match` because it's also serving the
+**Note:** MySQL refused to drop `idx_donations_match` because it's also serving the
 `category_id` foreign key (MySQL reuses an index that starts with the foreign-key column).
 
 **Measured:** with 10,272 rows every tested request replied in a few milliseconds
@@ -175,7 +174,7 @@ separates rows well.
 - **Privilege note:** `SELECT ... FOR UPDATE` needs UPDATE permission on that table. The app has it
   on donations/needs/allocations, and never locks `donation_events`.
 
-## 8. Column-by-column (for "what's this column?" questions)
+## 8. Columns
 
 **users:** `id`, `name`, `email` (lowercase, unique), `password_hash` (bcrypt, ~60 characters, starts
 `$2`), `role`, `created_at`.

@@ -1,8 +1,7 @@
-# What the professor asked for, and where it is
+# Requirements and where they are met
 
-I re-checked the professor's guide ("Your Project — Full Stack Development", 8 pages) and the
-feedback on our proposal. **Concurrency is the main one, but not the only one.** Here's every
-requirement, where it is, and what proves it.
+This document maps each requirement in the course project guide ("Your Project — Full Stack
+Development") and in the feedback on our proposal to where it is implemented and how it is verified.
 
 ## A. The hard rules from the guide (page 1)
 
@@ -17,7 +16,7 @@ requirement, where it is, and what proves it.
 | 3 | **Refuse invalid requests even if they bypass the interface** | `backend/validate.js`, `auth.js`, ownership checks in routes/services, DB constraints | `tests/4-security.test.js` (Postman-style attacks), `tests/5-database.test.js` |
 | 4 | **Correct when two people act at the same instant** | `backend/services/claims.js` (`FOR UPDATE` row locks) | `tests/6-concurrency.test.js` |
 | 5 | At least one hard requirement (concurrency / multi-row transaction / append-only history) | **all three** | see table B |
-| 6 | "Describe the exact test that would catch it if you got it wrong" | the 70 + 70 test | first test in `6-concurrency.test.js`; the break-it experiment |
+| 6 | "Describe the exact test that would catch it if you got it wrong" | the 70 + 70 test | first test in `6-concurrency.test.js`; with `FOR UPDATE` removed from the claim, 5 of the 9 concurrency tests fail |
 
 ## B. The three kinds of hard requirement (page 2)
 
@@ -42,12 +41,11 @@ requirement, where it is, and what proves it.
 | "Transactions: BEGIN, COMMIT, ROLLBACK, and row locking" | `db.js` + `claims.js` |
 | "Indexes: know when to add one and why" | `schema.sql` bottom; evidence in `2-DATABASE.md` section 6 |
 | "Postman: we will use it on your submission" | `docs/GiveGrid.postman_collection.json` |
-| "Git and GitHub: part of the assessment" | your repository history |
+| "Git and GitHub: part of the assessment" | the repository's commit history and branches |
 | ".env: keeping secrets out of the repository" | `.env` in `.gitignore`, `.env.example` committed |
 | Optional bonus: "Jest or Vitest: automated tests, **4 bonus marks**" | 120 Jest + Supertest tests |
 | "NoSQL databases: explicitly disallowed" | MySQL only |
-| "Plain HTML, CSS and JavaScript are permitted instead of React... lose no marks" | our frontend |
-| "AI assistants: permitted — but you must be able to explain every line you submit" | this whole `docs/` folder |
+| "Plain HTML, CSS and JavaScript are permitted instead of React" | our frontend |
 
 ## D. The professor's feedback on our proposal, and what we did
 

@@ -1,22 +1,23 @@
-# The backend, explained
+# Backend
 
-Everything in `backend/`. Express 4 + MySQL (`mysql2`). Read sections in order the first time.
+Everything in `backend/`. Express 4 + MySQL (`mysql2`).
 
 ```text
 backend/
-├── server.js        starts listening + the expiry timer            (Tier 3)
-├── app.js           builds Express: middleware, routes, errors     (Tier 2)
-├── config.js        reads .env                                     (Tier 3)
-├── db.js            MySQL pool + withTransaction                   (Tier 1)
-├── auth.js          JWT, authenticate, authorise                   (Tier 2)
-├── errors.js        HttpError, asyncHandler                        (Tier 3)
-├── validate.js      input checks                                   (Tier 2)
-├── rules.js         decideClaim, STEPS                             (Tier 1)
-├── routes/          one file per URL group                         (Tier 2)
+├── server.js        starts listening + the expiry timer
+├── app.js           builds Express: middleware, routes, errors
+├── config.js        reads .env
+├── db.js            MySQL pool + withTransaction
+├── auth.js          JWT, authenticate, authorise
+├── errors.js        HttpError, asyncHandler
+├── security.js      security headers, login limiter
+├── validate.js      input checks
+├── rules.js         decideClaim, STEPS
+├── routes/          one file per URL group
 └── services/
-    ├── claims.js    THE HARD REQUIREMENT                           (Tier 1)
-    ├── events.js    writes history                                 (Tier 2)
-    └── matching.js  ranking queries                                (Tier 2)
+    ├── claims.js    claims, locking, expiry (the hard requirement)
+    ├── events.js    writes history
+    └── matching.js  ranking queries
 ```
 
 ---
@@ -55,8 +56,8 @@ the **error handler** at the bottom of `app.js`, which sends `{ "error": "..." }
 
 **Layers:** route (HTTP: read the request, validate, reply) → service (business logic + SQL) →
 MySQL. Simple routes (e.g. "get one need") run their SQL directly in the route file; the risky logic
-(claims, history, matching) lives in `services/` so it can be read and tested on its own. This is
-the route → controller → service → model idea from class, with the controller kept inside the route
+(claims, history, matching) lives in `services/` so it can be read and tested on its own. This follows
+the layered route → controller → service → model structure, with the controller kept inside the route
 file because each handler is only a few lines.
 
 ## 2. `app.js` and `server.js`: why two files
@@ -67,18 +68,19 @@ file because each handler is only a few lines.
   called `listen`, every test file would try to grab port 3000 and the tests would clash and not exit.
 
 **Middleware order in `app.js` (order matters: first match wins):**
-0. `app.disable('x-powered-by')` and `securityHeaders`: safety headers on every reply (`security.js`).
-1. `express.json({ limit: '10kb' })`: reads JSON bodies into `req.body`. Broken JSON → error handler → 400.
-2. `express.static('frontend')`: if the URL is a file in `frontend/` (e.g. `/donor.html`), send it.
+1. `app.disable('x-powered-by')` and `securityHeaders`: safety headers on every reply (`security.js`).
+2. `express.json({ limit: '10kb' })`: reads JSON bodies into `req.body`. Broken JSON → 400; a body over 10 kB → 413.
+3. `express.static('frontend')`: if the URL is a file in `frontend/` (e.g. `/donor.html`), send it.
    Same server for pages and API = same origin, so the browser needs **no CORS** setup.
-3. `/api/health`, `/api/health/db`, `/api/categories`: three tiny public routes.
-4. The six routers.
-5. `app.use('/api', ...)`: nothing matched → 404 `{ error: 'Route not found' }`.
-6. The error handler `(err, req, res, next)`: Express knows it's an error handler because it has **4 arguments**.
+4. `/api/health`, `/api/health/db`, `/api/categories`: three small public routes.
+5. The six routers.
+6. `app.use('/api', ...)`: nothing matched → 404 `{ error: 'Route not found' }`.
+7. The error handler `(err, req, res, next)`: Express knows it's an error handler because it has **4 arguments**.
 
 **The error handler decides:**
 - `HttpError` (thrown on purpose) → its own status + message (+ extras like `offer`).
 - `err.type === 'entity.parse.failed'` (bad JSON) → 400.
+- `err.type === 'entity.too.large'` (body over 10 kB) → 413.
 - anything else (a real bug) → log it with `console.error`, reply **500 "Something went wrong on the server"**.
   Never the SQL or stack trace: those would tell an attacker about our database.
 
@@ -111,7 +113,7 @@ variables exist and throws a clear message if not. `isTest` is true when Jest ru
 
 **errors.js:**
 - `class HttpError extends Error`: an error that carries a `status` (and optional `extra` fields).
-- `asyncHandler(fn)`: **the Express 4 async trap**. If an `async` route throws, Express 4 doesn't notice;
+- `asyncHandler(fn)`: **handles async errors in Express 4**. If an `async` route throws, Express 4 doesn't notice;
   the request hangs forever. `asyncHandler` adds `.catch(next)`, so the error reaches the error handler.
   Every async route is wrapped in it.
 
@@ -126,8 +128,10 @@ variables exist and throws a clear message if not. `isTest` is true when Jest ru
 4. Reply 201 with a token and the user (never the hash).
 
 **Login** (`POST /api/auth/login`):
-1. Find the user by email; `bcrypt.compare(typed, storedHash)` re-hashes with the stored salt and compares.
-2. Wrong email **or** wrong password → the **same** 401 message, so an attacker can't learn which emails
+1. Login limiter (`security.js`): after 5 wrong passwords for the same email from the same IP, reply
+   **429** for 15 minutes. A correct login resets the count.
+2. Find the user by email; `bcrypt.compare(typed, storedHash)` re-hashes with the stored salt and compares.
+3. Wrong email **or** wrong password → the **same** 401 message, so an attacker can't learn which emails
    have accounts (*user enumeration*).
 
 **JWT** (`makeToken`): `jwt.sign({ id, role }, JWT_SECRET, { expiresIn: '1d' })`.
@@ -153,9 +157,9 @@ owner the same as `req.user.id`?" A role check alone isn't enough: any NGO has r
 which is why we escape all text (`esc()`, see `5-FRONTEND.md`) to prevent XSS. An HttpOnly cookie is
 the safer alternative (JS can't read it); we chose localStorage for simplicity.
 
-## 5. ★ The claim: `createClaim` in `services/claims.js`
+## 5. The claim: `createClaim` in `services/claims.js`
 
-This is the hard requirement. Know it cold.
+This is the hard requirement.
 
 **The race without locks:**
 ```text
@@ -308,7 +312,7 @@ INSERT INTO donation_events (donation_id, seq, action, quantity, actor_id, alloc
 
 `stepHandler(stepName)` builds the handler for each of the five, so they're identical apart from the name.
 
-### REST choices you may be asked about
+### REST design choices
 - **Nouns in URLs, verbs in HTTP methods:** `/donations/7/claims` (a claim belongs to a donation).
 - **GET** never changes anything. **POST** creates. **PATCH** changes *part* of a row (we edit only
   title/description, or only status). PUT would mean "replace the whole row", which we never do.
@@ -354,11 +358,10 @@ ORDER BY score DESC, d.available_quantity DESC, d.id LIMIT 50
 | Stolen DB password | least privilege: app account can't delete or rewrite history | scripts/setup.js |
 | XSS (script in a title) | the frontend escapes all text with `esc()` | frontend/js/common.js |
 | CORS | not needed: frontend and API on the same origin | app.js |
-
 | Clickjacking, scripts from other sites, file-type guessing | security headers (X-Frame-Options, CSP, nosniff), `X-Powered-By` hidden | `backend/security.js`, app.js |
 | Password guessing (brute force) | 5 wrong passwords for one email from one IP → 429 for 15 minutes | `security.js`, authRoutes |
 | Huge request bodies | `express.json({ limit: '10kb' })` → 413 | app.js |
 
-The headers and the login limiter are written by hand (about 30 lines) instead of using the `helmet`
-and `express-rate-limit` packages, so every line can be explained. Full numbered list of all 14 layers:
-`docs/8-VIVA-SURVIVAL.md` §5.
+The headers and the login limiter are written by hand (about 30 lines in `security.js`) instead of
+using the `helmet` and `express-rate-limit` packages, which keeps the dependency list short and the
+behaviour visible in our own code.

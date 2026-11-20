@@ -1,6 +1,6 @@
-# The frontend, explained
+# Frontend
 
-Plain HTML + CSS + JavaScript, no framework (the course guide allows this "and lose no marks").
+Plain HTML + CSS + JavaScript, no framework (permitted by the project guide).
 Served by Express from the `frontend/` folder, so pages and API share `http://localhost:3000`.
 
 ## Pages
@@ -23,7 +23,7 @@ Every page loads `js/common.js` first, then its own script.
 | `saveLogin(data)`, `getUser()`, `logout()` | keep the token and user in `localStorage` |
 | `requireRole('NGO')` | wrong person → back to login. **Only hides pages; the server is the real guard.** |
 | `api(method, path, body)` | the **only** `fetch` call. Adds the token, sends JSON, returns `{ ok, status, data }`, never throws |
-| `showLoading(id)`, `showError(id, msg)`, `showTable(id, items, headings, makeCells, emptyText)` | the three states the course marks: **loading, error, empty** (+ the table when there's data) |
+| `showLoading(id)`, `showError(id, msg)`, `showTable(id, items, headings, makeCells, emptyText)` | the **loading, error and empty** states (+ the table when there's data) |
 | `showMessage(id, text, type)` | green/red message under a form |
 | `esc(text)` | makes text safe for HTML (stops XSS) |
 | `formData(form)` | all inputs of a form as an object, keyed by `name=""` |

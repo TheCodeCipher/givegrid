@@ -80,8 +80,8 @@ async function api(method, path, body) {
 
 
 // ---------- 3. Showing things: loading, error, empty, table ----------
-// The course marks "conditional rendering": every list must show a
-// loading state, an error state, and an empty state.
+// Conditional rendering: every list shows a loading state, an error state,
+// and an empty state, so the user always knows what is happening.
 
 function showLoading(boxId) {
   document.getElementById(boxId).innerHTML = '<p class="muted">Loading…</p>';

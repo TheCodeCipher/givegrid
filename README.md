@@ -35,7 +35,7 @@ Jest + Supertest · Postman · Git. MongoDB is not used, because the course guid
 
 ## Run it
 
-Needs Node.js 18+ and MySQL 8 **or** MariaDB 10.5+. All tests were run and passed on both MySQL 8.0.46 and MariaDB 10.11 (Node 22).
+Needs Node.js 18+ and MySQL 8 **or** MariaDB 10.5+. Tested with MySQL 8 and MariaDB 10.11.
 
 ```text
 1. npm install
@@ -59,7 +59,7 @@ database/       schema.sql: every table and rule   -> docs/2-DATABASE.md
 scripts/        setup.js (build database), seed.js (demo data)
 frontend/       plain HTML/CSS/JS pages             -> docs/5-FRONTEND.md
 tests/          7 kinds of tests, 120 tests         -> docs/4-TESTS.md
-docs/           guides written for the team, the viva survival guide, plus the Postman collection
+docs/           technical documentation and the Postman collection
 ```
 
 ## API
@@ -91,7 +91,23 @@ Status codes: `200` OK · `201` created · `400` bad input · `401` not logged i
 
 ## Results
 
-- **120 tests pass** (unit, smoke, functional, security, database, concurrency, performance). Coverage 92% of lines.
+- **120 tests pass** (unit, smoke, functional, security, database, concurrency, performance). Coverage 93% of lines.
 - Removing `FOR UPDATE` from the claim makes **5 of the 9 concurrency tests fail**, so the tests really detect the race.
 - With the locks, the concurrency tests passed **10 runs out of 10**.
 - **10,272 rows** seeded. Every measured request replied in a few milliseconds. Indexes checked with `EXPLAIN`.
+
+## Deliberately excluded
+
+Left out on purpose to keep the scope focused (agreed after the feedback on our proposal):
+
+1. Meal sponsorship, money donations, payments.
+2. Restaurant or food-delivery integrations (e.g. Zomato).
+3. Medical supplies and other regulated goods.
+4. Cooked or perishable food.
+5. Courier or logistics integrations (pickup and delivery are recorded inside GiveGrid).
+6. Chat and live notifications (Socket.io).
+7. Map distance (PostGIS). City and area are enough.
+8. Rebuilding past state from history at any moment; hash-chained history.
+9. Fraud detection or ID checks beyond the admin verifying NGOs.
+10. Returns or disputes after pickup.
+11. Mobile apps, microservices, GraphQL, NoSQL, AI/ML, deployment.

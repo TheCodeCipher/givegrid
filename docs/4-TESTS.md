@@ -1,4 +1,4 @@
-# The tests, explained
+# Tests
 
 **Run all:** `npm test` (= `jest --runInBand`). **One file:** `npx jest --runInBand tests/6-concurrency.test.js`.
 **One test by name:** `npx jest --runInBand -t "PROFESSOR"`. **Coverage:** `npm run test:coverage`.
@@ -6,9 +6,9 @@
 `--runInBand` = run test files **one after another**, not at the same time. All files share one
 test database and wipe it before each test; running them in parallel would let them wipe each other.
 
-## 1. The kinds of test, in plain words
+## 1. Kinds of test
 
-The testing pyramid from class: many fast **unit** tests at the bottom, fewer **integration** tests in
+Following the testing pyramid: many fast **unit** tests at the bottom, fewer **integration** tests in
 the middle, few **end-to-end** tests on top.
 
 | File | Kind | Checks, in one line | Count |
@@ -21,16 +21,16 @@ the middle, few **end-to-end** tests on top.
 | `6-concurrency.test.js` | **Concurrency (race)** | the hard requirement: many requests at the same instant still give correct results | 9 |
 | `7-performance.test.js` | **Performance** | with 10,000+ rows, requests stay fast and use our indexes | 8 |
 
-Kinds we don't have a separate file for, and what to say:
+Other kinds of testing and how they apply here:
 - **Regression testing** = re-running all the old tests after every change, to catch something that
   used to work and broke. That's what `npm test` is: run it before every commit.
-- **End-to-end (E2E)** = a robot clicks through the real website. We did this once with a scripted
-  browser (whole flow donor → NGO → admin, no JavaScript errors) and do it by hand with the checklist
-  in section 5. It's not in the Jest suite (the course demoed E2E tools but didn't require them).
+- **End-to-end (E2E)** = an automated browser clicks through the real website. The whole flow
+  (donor → NGO → admin) was run once with a scripted browser with no JavaScript errors, and is
+  repeated by hand with the checklist in section 5. It is not part of the Jest suite.
 - **UAT (user acceptance testing)** = a real user checks it does what they need: the manual checklist in section 5.
 - **Integration** is the same as our functional tests: they test the pieces *together* (route + service + MySQL).
 
-## 2. How a test is written
+## 2. How a test is structured
 
 ```js
 test('a claim reserves immediately', async () => {
@@ -48,26 +48,8 @@ test('a claim reserves immediately', async () => {
 });
 ```
 
-| Piece | Meaning |
-|---|---|
-| `describe('...', () => {...})` | a group of related tests |
-| `test('...', async () => {...})` | one test (`it` is the same thing) |
-| `expect(x).toBe(y)` | x must be exactly y (numbers, text, true/false) |
-| `expect(x).toEqual(y)` | x must have the same **contents** as y (objects, arrays) |
-| `toHaveLength(n)`, `toContain`, `toBeNull`, `toMatch(/regex/)`, `toBeLessThan` | other checks |
-| `expect(() => f()).toThrow('msg')` | f must throw. **Needs a function** `() =>`, otherwise the error happens before expect can catch it |
-| `await expect(promise).rejects.toThrow(/.../)` | an async call must fail (used for "MySQL refuses this") |
-| `test.each([...])` | run the same test once per value |
-| `beforeEach(h.resetDb)` | before every test, empty the tables, so **tests don't depend on each other** |
-| `afterAll(h.closeDb)` | close database connections at the end so Jest can exit |
-| `jest.spyOn(obj, 'fn').mockRejectedValueOnce(err)` | temporarily replace a function so it fails once (used to fake a crash) |
-
-**Supertest:** `request(app).post('/api/...').set('Authorization', 'Bearer ...').send({...})` sends a real
-HTTP request to our app without starting the server. The reply has `res.status`, `res.body`,
-`res.headers`, `res.text`.
-
-**Always `await`.** Without `await`, the test finishes before the request returns and passes even if
-the result is wrong (a "false pass").
+Each test follows Arrange–Act–Assert and checks both the HTTP reply (via Supertest, which sends real
+requests to `app.js` without starting a server) and what was actually saved in MySQL.
 
 ## 3. The helpers (`tests/helpers.js`)
 
@@ -86,28 +68,28 @@ the result is wrong (a "false pass").
 The app connects as the **limited** `givegrid_app` account during tests, exactly as when it runs.
 Root (`adminDb`) is only used to reset and to set up special situations.
 
-## 4. The tests worth explaining in the viva
+## 4. Key tests
 
-**★ The professor's test** (`6-concurrency`): two claims of 70 on 100, sent with
+**The 70 + 70 race test** (`6-concurrency`): two claims of 70 on 100, sent with
 `Promise.all([...])` so they really overlap. Expect one 201, one 409 with `offer: 30`, available 30,
 total claimed 70 (never 140), one CLAIM_HELD entry, invariants hold.
 
-**★ Why `Promise.all` and not two browser windows:** humans can't click at the same millisecond, so
+**Why `Promise.all` and not two browser windows:** humans can't click at the same millisecond, so
 two windows usually test "one after the other", which even broken code passes (the professor's feedback).
 `Promise.all` starts every request before waiting for any of them.
 
-**★ Stress test:** 100 claims of 2 units on 100 units at once, repeated 3 times on fresh data. Exactly
+**Stress test:** 100 claims of 2 units on 100 units at once, repeated 3 times on fresh data. Exactly
 50 succeed, 50 get 409, zero 500s (no crash, no deadlock), 0 left, invariants hold.
 
-**★ Rollback test** (`5-database`): `jest.spyOn(events, 'addEvent')` makes the *last* step of a claim
+**Rollback test** (`5-database`): `jest.spyOn(events, 'addEvent')` makes the *last* step of a claim
 fail. By then the claim has already lowered both counters and inserted its row. Afterwards: stock still
 100, need still 50, 0 claims, only 1 history row. That proves BEGIN/ROLLBACK works.
 
-**★ Append-only tests** (`5-database`): as `givegrid_app`, UPDATE/DELETE/TRUNCATE on history → "command
+**Append-only tests** (`5-database`): as `givegrid_app`, UPDATE/DELETE/TRUNCATE on history → "command
 denied". As root, UPDATE/DELETE → the trigger's "append-only" error. Then: the row is unchanged and
 INSERT still works.
 
-**★ Proof the tests work:** remove `FOR UPDATE` from `createClaim` → 5 of 9 concurrency tests fail.
+**Proof the tests detect the bug:** remove `FOR UPDATE` from `createClaim` → 5 of 9 concurrency tests fail.
 
 **Performance** (`7-performance`): loads the same 10,272 rows as `npm run seed`, checks > 5,000 rows,
 times 5 busy requests (limit 300 ms; really a few ms), and uses `EXPLAIN` to check the matching and
@@ -130,22 +112,10 @@ After `npm run seed` and `npm start`:
 
 `npm run test:coverage` prints 4 numbers per file:
 **Statements** (lines of code run), **Branches** (each side of every `if` taken), **Functions** (called
-at least once), **Lines**. Ours: **92% lines, 81% branches**. The uncovered parts are mostly error
+at least once), **Lines**. Ours: **93% lines, 82% branches**. The uncovered parts are mostly error
 branches like "database unreachable" and the seed script's command-line part.
 
-## 7. Reading a failure
-
-```text
-● claims (one at a time) › a claim reserves immediately
-  expect(received).toBe(expected)
-  Expected: 60
-  Received: 100
-    at tests/3-functional.test.js:200:7
-```
-Read it as: *which test* (the ● line) → *what was expected vs what happened* → *which line*.
-"Expected 60, received 100" here would mean the stock was never lowered.
-
-## 8. Every test (latest run)
+## 7. Every test (latest run)
 
 ```text
 
