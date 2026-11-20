@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiveGrid — Log in</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span><span></span></span>GiveGrid</a>
+  </header>
+
+  <main class="auth">
+    <div class="auth-card">
+      <nav class="tabs" role="tablist">
+        <button class="tab" data-tab="login" role="tab">Log in</button>
+        <button class="tab" data-tab="register" role="tab">Create an account</button>
+      </nav>
+
+      <section class="panel" data-panel="login">
+        <form id="login-form" class="stack">
+          <h1>Welcome back</h1>
+          <label>Email <input type="email" name="email" autocomplete="email" required></label>
+          <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+          <button type="submit">Log in</button>
+          <p id="login-message"></p>
+        </form>
+      </section>
+
+      <section class="panel" data-panel="register">
+        <form id="register-form" class="stack">
+          <h1>Create an account</h1>
+          <label>I am
+            <select name="role" id="role">
+              <option value="DONOR">giving items (donor)</option>
+              <option value="NGO">an NGO that needs items</option>
+            </select>
+          </label>
+          <label>Your name <input name="name" autocomplete="name" required></label>
+          <label>Email <input type="email" name="email" autocomplete="email" required></label>
+          <label>Password (8 to 72 characters) <input type="password" name="password" minlength="8" maxlength="72" autocomplete="new-password" required></label>
+          <button type="submit">Create account</button>
+          <p id="register-message"></p>
+        </form>
+      </section>
+
+      <p class="demo">Demo accounts (password <code>password123</code>): donor@givegrid.local, ngo@givegrid.local, admin@givegrid.local</p>
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

@@ -3,46 +3,65 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GiveGrid — Donor</title>
+  <title>GiveGrid — Donor dashboard</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topbar">
-    <span class="brand">GiveGrid</span>
-    <span id="who" class="muted"></span>
-    <button id="logout" class="secondary">Log out</button>
+    <a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span><span></span></span>GiveGrid</a>
+    <span id="who" class="who"></span>
+    <button id="logout" class="button-quiet">Log out</button>
   </header>
 
-  <main class="page">
-    <h1>Donor dashboard</h1>
-
-    <h2>Claims on my donations</h2>
-    <p class="muted">When an NGO has confirmed a claim and collected the items, press “Record pickup”.</p>
-    <div id="claims"></div>
-    <p id="claim-message"></p>
-
-    <h2>My donations</h2>
-    <div id="donations"></div>
-
-    <form id="donation-form" class="card">
-      <h2>List a new donation</h2>
-      <label>Title <input name="title" required></label>
-      <label>Description <textarea name="description" rows="2"></textarea></label>
-      <label>Category <select name="category_id" id="category" required></select></label>
-      <div class="row">
-        <label>Quantity <input type="number" name="total_quantity" min="1" step="1" required></label>
-        <label>Unit (e.g. chairs) <input name="unit" required></label>
+  <main class="app">
+    <div class="page-head">
+      <div>
+        <h1>Your donations</h1>
+        <p id="summary" class="summary">Loading…</p>
       </div>
-      <div class="row">
-        <label>City <input name="city" required></label>
-        <label>Area / locality <input name="locality"></label>
-      </div>
-      <button type="submit">List donation</button>
-      <p id="form-message"></p>
-    </form>
+      <button type="button" id="new-donation">List an item</button>
+    </div>
 
-    <h2>What NGOs need right now</h2>
-    <div id="needs"></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" data-tab="donations" role="tab">My donations</button>
+      <button class="tab" data-tab="claims" role="tab">Handovers <span id="claims-count" class="count"></span></button>
+      <button class="tab" data-tab="new" role="tab">List an item</button>
+      <button class="tab" data-tab="needs" role="tab">What NGOs need</button>
+    </nav>
+
+    <section class="panel" data-panel="donations">
+      <div id="donations"></div>
+    </section>
+
+    <section class="panel" data-panel="claims">
+      <p class="panel-intro">When an NGO has confirmed a claim and collected the items, press “Record pickup”.</p>
+      <div id="claims"></div>
+      <p id="claim-message"></p>
+    </section>
+
+    <section class="panel" data-panel="new">
+      <form id="donation-form" class="card form-card stack">
+        <h2>List an item</h2>
+        <label>Title <input name="title" placeholder="e.g. Stackable office chairs" required></label>
+        <label>Description <textarea name="description" rows="2" placeholder="Condition, size, anything an NGO should know"></textarea></label>
+        <label>Category <select name="category_id" id="category" required></select></label>
+        <div class="row">
+          <label>Quantity <input type="number" name="total_quantity" min="1" step="1" required></label>
+          <label>Unit <input name="unit" placeholder="e.g. chairs" required></label>
+        </div>
+        <div class="row">
+          <label>City <input name="city" required></label>
+          <label>Area or locality <input name="locality"></label>
+        </div>
+        <div><button type="submit">List donation</button></div>
+        <p id="form-message"></p>
+      </form>
+    </section>
+
+    <section class="panel" data-panel="needs">
+      <p class="panel-intro">Open requests from verified NGOs, most urgent first.</p>
+      <div id="needs"></div>
+    </section>
   </main>
 
   <script src="js/common.js"></script>

@@ -3,32 +3,45 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GiveGrid — Matches</title>
+  <title>GiveGrid — Matching donations</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topbar">
-    <span class="brand">GiveGrid</span>
-    <span id="who" class="muted"></span>
-    <button id="logout" class="secondary">Log out</button>
+    <a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span><span></span></span>GiveGrid</a>
+    <span id="who" class="who"></span>
+    <button id="logout" class="button-quiet">Log out</button>
   </header>
 
-  <main class="page">
-    <p><a href="ngo.html">← Back to dashboard</a></p>
-    <h1>Donations for your need</h1>
-    <div id="need"></div>
-    <p class="muted">Score: +30 if it covers everything you still need, +20 same area, +10 same city.
-      Only the same category and unit are listed.</p>
-    <div id="matches"></div>
+  <main class="app">
+    <a class="back" href="ngo.html">Back to your dashboard</a>
+    <div class="page-head">
+      <div id="need"><h1>Matching donations</h1></div>
+    </div>
 
-    <!-- Shown after "Claim" is pressed on a row -->
-    <form id="claim-form" class="card hidden">
-      <h2>Claim: <span id="claim-title"></span></h2>
-      <label>How many? <input type="number" id="claim-quantity" min="1" step="1" required></label>
-      <button type="submit">Claim</button>
-      <div id="offer" class="offer hidden"></div>
-      <p id="claim-message"></p>
-    </form>
+    <div class="split">
+      <section>
+        <p class="panel-intro">Only donations in the same category and unit are listed. Score: +30 if it covers
+          everything you still need, +20 if it is in the same area, +10 if it is in the same city.</p>
+        <div id="matches"></div>
+      </section>
+
+      <aside class="side-panel">
+        <div id="claim-hint" class="card">
+          <h2>Claim a donation</h2>
+          <p class="muted">Choose “Claim” next to a donation to reserve some of it for this need.</p>
+        </div>
+
+        <!-- Shown after "Claim" is pressed on a row -->
+        <form id="claim-form" class="card stack hidden">
+          <h2>Claim: <span id="claim-title"></span></h2>
+          <label>How many? <input type="number" id="claim-quantity" min="1" step="1" required></label>
+          <div><button type="submit">Claim</button></div>
+          <div id="offer" class="offer hidden"></div>
+          <p id="claim-message"></p>
+        </form>
+      </aside>
+    </div>
   </main>
 
   <script src="js/common.js"></script>

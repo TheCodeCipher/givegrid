@@ -3,66 +3,81 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GiveGrid — NGO</title>
+  <title>GiveGrid — NGO dashboard</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topbar">
-    <span class="brand">GiveGrid</span>
-    <span id="who" class="muted"></span>
-    <button id="logout" class="secondary">Log out</button>
+    <a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span><span></span></span>GiveGrid</a>
+    <span id="who" class="who"></span>
+    <button id="logout" class="button-quiet">Log out</button>
   </header>
 
-  <main class="page">
-    <h1>NGO dashboard</h1>
-    <div id="profile"><p class="muted">Loading…</p></div>
+  <main class="app">
+    <div class="page-head">
+      <div>
+        <h1 id="ngo-name">Your NGO</h1>
+        <div id="profile" class="summary">Loading…</div>
+      </div>
+    </div>
 
     <!-- Shown only when the NGO has no profile yet -->
-    <form id="ngo-form" class="card hidden">
+    <form id="ngo-form" class="card form-card stack hidden">
       <h2>Register your NGO</h2>
       <p class="muted">An administrator checks every NGO before it can post needs or claim donations.</p>
       <label>NGO name <input name="name" required></label>
       <div class="row">
         <label>City <input name="city" required></label>
-        <label>Area / locality <input name="locality"></label>
+        <label>Area or locality <input name="locality"></label>
       </div>
-      <button type="submit">Send for verification</button>
+      <div><button type="submit">Send for verification</button></div>
       <p id="ngo-message"></p>
     </form>
 
     <!-- Shown only when the NGO is VERIFIED -->
-    <section id="verified-area" class="hidden">
-      <h2>My claims</h2>
-      <p class="muted">Confirm your pickup plan within 48 hours, or the items are released for others.</p>
-      <div id="claims"></div>
-      <p id="claim-message"></p>
+    <div id="verified-area" class="hidden">
+      <nav class="tabs" role="tablist">
+        <button class="tab" data-tab="claims" role="tab">My claims <span id="claims-count" class="count"></span></button>
+        <button class="tab" data-tab="needs" role="tab">My needs</button>
+        <button class="tab" data-tab="new" role="tab">Post a need</button>
+      </nav>
 
-      <h2>My needs</h2>
-      <div id="needs"></div>
+      <section class="panel" data-panel="claims">
+        <p class="panel-intro">Confirm your pickup plan within 48 hours of claiming, or the items are released for other NGOs.</p>
+        <div id="claims"></div>
+        <p id="claim-message"></p>
+      </section>
 
-      <form id="need-form" class="card">
-        <h2>Post a new need</h2>
-        <label>What do you need? <input name="title" required></label>
-        <label>Category <select name="category_id" id="category" required></select></label>
-        <div class="row">
-          <label>Quantity <input type="number" name="quantity_required" min="1" step="1" required></label>
-          <label>Unit (e.g. chairs) <input name="unit" required></label>
-          <label>Urgency
-            <select name="urgency">
-              <option value="HIGH">High</option>
-              <option value="MEDIUM" selected>Medium</option>
-              <option value="LOW">Low</option>
-            </select>
-          </label>
-        </div>
-        <div class="row">
-          <label>City <input name="city" required></label>
-          <label>Area / locality <input name="locality"></label>
-        </div>
-        <button type="submit">Post need</button>
-        <p id="need-message"></p>
-      </form>
-    </section>
+      <section class="panel" data-panel="needs">
+        <p class="panel-intro">Open a need to see donations ranked for it and claim one.</p>
+        <div id="needs"></div>
+      </section>
+
+      <section class="panel" data-panel="new">
+        <form id="need-form" class="card form-card stack">
+          <h2>Post a need</h2>
+          <label>What do you need? <input name="title" placeholder="e.g. Chairs for a classroom" required></label>
+          <label>Category <select name="category_id" id="category" required></select></label>
+          <div class="row">
+            <label>Quantity <input type="number" name="quantity_required" min="1" step="1" required></label>
+            <label>Unit <input name="unit" placeholder="e.g. chairs" required></label>
+            <label>Urgency
+              <select name="urgency">
+                <option value="HIGH">High</option>
+                <option value="MEDIUM" selected>Medium</option>
+                <option value="LOW">Low</option>
+              </select>
+            </label>
+          </div>
+          <div class="row">
+            <label>City <input name="city" required></label>
+            <label>Area or locality <input name="locality"></label>
+          </div>
+          <div><button type="submit">Post need</button></div>
+          <p id="need-message"></p>
+        </form>
+      </section>
+    </div>
   </main>
 
   <script src="js/common.js"></script>

@@ -8,33 +8,44 @@
 </head>
 <body>
   <header class="topbar">
-    <span class="brand">GiveGrid</span>
-    <span id="who" class="muted"></span>
-    <button id="logout" class="secondary">Log out</button>
+    <a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span><span></span></span>GiveGrid</a>
+    <span id="who" class="who"></span>
+    <button id="logout" class="button-quiet">Log out</button>
   </header>
 
-  <main class="page">
-    <p><a id="back" href="index.html">← Back to dashboard</a></p>
-    <div id="details"><p class="muted">Loading…</p></div>
+  <main class="app">
+    <a id="back" class="back" href="index.html">Back to your dashboard</a>
 
-    <!-- Only for the donor who owns this donation -->
-    <section id="owner-area" class="hidden">
-      <form id="edit-form" class="card">
-        <h2>Edit</h2>
-        <label>Title <input name="title" id="edit-title" required></label>
-        <label>Description <textarea name="description" id="edit-description" rows="2"></textarea></label>
-        <button type="submit">Save</button>
-        <button type="button" id="close-button" class="danger">Close to new claims</button>
-        <p id="edit-message"></p>
-      </form>
-      <h2>NGOs that need this most</h2>
-      <p class="muted">Score: urgency (+30 high, +15 medium) + covers their whole need (+30) + nearby (+20 / +10).</p>
-      <div id="best-needs"></div>
-    </section>
+    <div class="split">
+      <section>
+        <div id="details"><p class="muted">Loading…</p></div>
 
-    <h2>History</h2>
-    <p class="muted">Every step is recorded and can never be changed or deleted.</p>
-    <div id="history"></div>
+        <!-- Only for the donor who owns this donation -->
+        <div id="best-needs-area" class="hidden">
+          <h2>NGOs that need this most</h2>
+          <p class="panel-intro">Score: urgency (+30 high, +15 medium), covers their whole need (+30), nearby (+20 same area, +10 same city).</p>
+          <div id="best-needs"></div>
+        </div>
+
+        <h2>History</h2>
+        <p class="panel-intro">Every step is recorded permanently and cannot be changed.</p>
+        <div id="history"></div>
+      </section>
+
+      <!-- Only for the donor who owns this donation -->
+      <aside id="owner-area" class="side-panel hidden">
+        <form id="edit-form" class="card stack">
+          <h2>Edit details</h2>
+          <label>Title <input name="title" id="edit-title" required></label>
+          <label>Description <textarea name="description" id="edit-description" rows="3"></textarea></label>
+          <div class="actions">
+            <button type="submit">Save changes</button>
+            <button type="button" id="close-button" class="danger">Stop new claims</button>
+          </div>
+          <p id="edit-message"></p>
+        </form>
+      </aside>
+    </div>
   </main>
 
   <script src="js/common.js"></script>

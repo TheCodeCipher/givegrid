@@ -3,9 +3,9 @@
 
 const user = getUser();
 if (!user) {
-  window.location.href = 'index.html';
+  window.location.href = 'login.html';
 } else {
-  document.getElementById('who').textContent = `${user.name} (${user.role})`;
+  document.getElementById('who').textContent = `${user.name}, ${ROLE_NAMES[user.role]}`;
   document.getElementById('logout').addEventListener('click', logout);
   document.getElementById('back').href = homePageFor(user.role);
 }
@@ -31,14 +31,17 @@ async function loadDetails() {
   const d = res.data;
 
   document.getElementById('details').innerHTML = `
-    <h1>${esc(d.title)} ${badge(d.status)}</h1>
-    <p class="stock"><strong>${d.available_quantity}</strong> of ${d.total_quantity} ${esc(d.unit)} available</p>
-    <p>${esc(d.description) || '<span class="muted">No description.</span>'}</p>
-    <p class="muted">${esc(d.category_name)} · ${esc(d.city)} · donated by ${esc(d.donor_name)}</p>`;
+    <div class="page-head"><h1>${esc(d.title)}</h1>${badge(d.status)}</div>
+    <div class="card">
+      <p class="stock"><strong>${d.available_quantity}</strong> of ${d.total_quantity} ${esc(d.unit)} still available</p>
+      <p>${esc(d.description) || '<span class="muted">No description.</span>'}</p>
+      <p class="muted">${esc(d.category_name)}, in ${esc(d.city)}. Donated by ${esc(d.donor_name)}.</p>
+    </div>`;
 
   // The owner sees the edit form and the best NGOs for this donation.
   if (user.role === 'DONOR' && user.id === d.donor_id) {
     document.getElementById('owner-area').classList.remove('hidden');
+    document.getElementById('best-needs-area').classList.remove('hidden');
     document.getElementById('edit-title').value = d.title;
     document.getElementById('edit-description').value = d.description || '';
     document.getElementById('close-button').classList.toggle('hidden', d.status === 'CLOSED');
@@ -79,7 +82,7 @@ document.getElementById('edit-form').addEventListener('submit', async (event) =>
 
 document.getElementById('close-button').addEventListener('click', async () => {
   const res = await api('POST', `/donations/${donationId}/close`);
-  showMessage('edit-message', res.ok ? 'Closed. Existing claims continue normally.' : res.data.error, res.ok ? 'success' : 'error');
+  showMessage('edit-message', res.ok ? 'New claims stopped. Existing claims continue normally.' : res.data.error, res.ok ? 'success' : 'error');
   loadDetails();
   loadHistory();
 });

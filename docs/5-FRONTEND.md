@@ -7,12 +7,13 @@ Served by Express from the `frontend/` folder, so pages and API share `http://lo
 
 | Page | Script | Who | Shows |
 |---|---|---|---|
-| `index.html` | `index.js` | anyone | login form, register form, server status |
-| `donor.html` | `donor.js` | DONOR | claims on my donations ("Record pickup"), my donations, new donation form, needs board |
-| `ngo.html` | `ngo.js` | NGO | register NGO / status / (if verified) my claims with buttons, my needs, new need form |
-| `matches.html?need=5` | `matches.js` | NGO | ranked donations for need 5, claim form, **counter-proposal box** |
-| `donation.html?id=7` | `donation.js` | anyone logged in | details, history table; owner: edit, close, best NGOs |
-| `admin.html` | `admin.js` | ADMIN | NGOs by status, Verify / Reject |
+| `index.html` | `home.js` | anyone | home page: what GiveGrid does, the 100-chair grid, how it works, sign-up links |
+| `login.html` | `login.js` | anyone | "Log in" and "Create an account" tabs (`?mode=register&role=NGO` opens the right one) |
+| `donor.html` | `donor.js` | DONOR | tabs: my donations, handovers ("Record pickup"), list an item, what NGOs need |
+| `ngo.html` | `ngo.js` | NGO | register NGO, or its status, or (when verified) tabs: my claims, my needs, post a need |
+| `matches.html?need=5` | `matches.js` | NGO | ranked donations for need 5; side panel with the claim form and the **counter-proposal box** |
+| `donation.html?id=7` | `donation.js` | anyone logged in | details and history; for the owner: edit, stop new claims, NGOs that need it most |
+| `admin.html` | `admin.js` | ADMIN | NGOs by status (tabs), Verify / Reject |
 
 Every page loads `js/common.js` first, then its own script.
 
@@ -21,9 +22,11 @@ Every page loads `js/common.js` first, then its own script.
 | Function | Does |
 |---|---|
 | `saveLogin(data)`, `getUser()`, `logout()` | keep the token and user in `localStorage` |
-| `requireRole('NGO')` | wrong person → back to login. **Only hides pages; the server is the real guard.** |
+| `requireRole('NGO')` | wrong person → back to the login page. **Only hides pages; the server is the real guard.** |
 | `api(method, path, body)` | the **only** `fetch` call. Adds the token, sends JSON, returns `{ ok, status, data }`, never throws |
 | `showLoading(id)`, `showError(id, msg)`, `showTable(id, items, headings, makeCells, emptyText)` | the **loading, error and empty** states (+ the table when there's data) |
+| `setupTabs()`, `showTab(name)` | show one section at a time: a `.tab` button with `data-tab="x"` shows the `.panel` with `data-panel="x"` |
+| `setCount(id, n)`, `plural(n, word)` | the number on a tab (e.g. claims waiting); "1 listing" / "3 listings" |
 | `showMessage(id, text, type)` | green/red message under a form |
 | `esc(text)` | makes text safe for HTML (stops XSS) |
 | `formData(form)` | all inputs of a form as an object, keyed by `name=""` |
@@ -69,14 +72,28 @@ Pages build HTML with template strings. If a donor names a donation `<script>ste
 and we inserted it raw, it would **run in every visitor's browser** (cross-site scripting) and could
 read the token from `localStorage`. `esc()` turns `<` into `&lt;` etc., so it shows as text.
 
+**One rule for buttons:** `onclick="..."` attributes only ever contain numbers or fixed words, such as
+`onclick="chooseDonation(5)"`, never text a user typed. Inside an attribute the browser decodes
+`&#39;` back into `'` before running the code, so escaping is not enough there. The matches page
+therefore passes only the donation's id and looks the title up in the list it already loaded
+(`matchList`), then shows it with `textContent`, which never runs as code.
+
 ## Buttons follow the server
 
 On the NGO page, which buttons a claim shows (`buttonsFor`) depends on the status the server sent.
 If the status changed meanwhile (e.g. it expired), pressing an old button just gets the server's 409
 message; the server checks every step. Hiding buttons is for convenience, not security.
 
-## CSS (`css/style.css`)
+## Look and layout (`css/style.css`)
 
-Flexbox for the top bar and form rows; **Grid** for login/register side by side
-(`repeat(auto-fit, minmax(280px, 1fr))` puts them in one column on phones); a `@media (max-width: 600px)`
-rule lets tables scroll sideways on phones. `.hidden { display: none }` is how sections are shown or hidden.
+- **Fonts:** Bricolage Grotesque for headings, Public Sans for text. Both are open-licensed and stored in
+  `frontend/fonts/`, because our Content-Security-Policy only allows files from our own server.
+- **Colours:** set once as CSS variables in `:root` (e.g. `var(--leaf)`) and reused everywhere.
+- **Tabs instead of one long page:** each dashboard shows a one-line summary and one section at a time.
+- **The home-page grid:** 100 squares built by `home.js`, one per chair of an example donation split
+  40/40/20 between three NGOs. It fills in once when the page opens; with "reduce motion" switched on in
+  the operating system, it appears without animation (`prefers-reduced-motion`).
+- **Responsive:** checked at 360, 768, 1280 and 1920 pixels wide with no sideways scrolling. Below 900px
+  the two-column pages stack into one column. Below 640px every table row becomes a small card: each
+  `<td>` carries `data-label="Column name"` (added by `showTable`) and the CSS shows that label above the value.
+- **Keyboard:** every button and link shows a visible focus outline (`:focus-visible`).

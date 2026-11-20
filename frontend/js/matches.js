@@ -5,20 +5,23 @@ requireRole('NGO');
 
 const needId = Number(getParam('need'));    // from matches.html?need=5
 let chosenDonationId = null;                // which donation the claim form is for
+let matchList = [];                         // the donations shown in the table, as the server sent them
 
 async function loadNeed() {
   const res = await api('GET', `/needs/${needId}`);
   if (!res.ok) return showError('need', res.data.error);
   const n = res.data;
   document.getElementById('need').innerHTML =
-    `<p><strong>${esc(n.title)}</strong> — still needed: <strong>${n.remaining_quantity} ${esc(n.unit)}</strong>,
-     ${esc(n.category_name)}, ${esc(n.city)}</p>`;
+    `<h1>Donations for “${esc(n.title)}”</h1>
+     <p class="summary">You still need <strong>${n.remaining_quantity} ${esc(n.unit)}</strong>
+       (${esc(n.category_name)}, ${esc(n.city)}).</p>`;
 }
 
 async function loadMatches() {
   showLoading('matches');
   const res = await api('GET', `/needs/${needId}/matches`);
   if (!res.ok) return showError('matches', res.data.error);
+  matchList = res.data;
 
   showTable('matches', res.data,
     ['Score', 'Donation', 'Available', 'Where', ''],
@@ -27,15 +30,21 @@ async function loadMatches() {
       `<a href="donation.html?id=${d.id}">${esc(d.title)}</a>`,
       `${d.available_quantity} ${esc(d.unit)}`,
       esc(d.locality ? `${d.locality}, ${d.city}` : d.city),
-      `<button onclick="chooseDonation(${d.id}, '${esc(d.title)}')">Claim</button>`,
+      // Only the id goes into onclick. Never put user-typed text (like a title) inside
+      // onclick: the browser decodes &#39; back into ' and the text could run as code.
+      `<button onclick="chooseDonation(${d.id})">Claim</button>`,
     ],
     'No open donations match this need yet. Check again later.');
 }
 
-function chooseDonation(donationId, title) {
+function chooseDonation(donationId) {
   chosenDonationId = donationId;
-  document.getElementById('claim-title').textContent = title;
+  const donation = matchList.find((d) => d.id === donationId);
+  document.getElementById('claim-title').textContent = donation.title;   // textContent: shown as plain text
+  document.getElementById('claim-hint').classList.add('hidden');
   document.getElementById('claim-form').classList.remove('hidden');
+  document.getElementById('claim-form').scrollIntoView();       // on phones the form is below the list
+  document.getElementById('claim-quantity').focus();            // ready to type the number
   document.getElementById('offer').classList.add('hidden');
   showMessage('claim-message', '', '');
 }
@@ -55,7 +64,7 @@ async function sendClaim(quantity) {
       `<p><strong>Only ${res.data.offer} can be reserved right now</strong>
         (${res.data.available} available, you still need ${res.data.stillNeeded}). Nothing has been reserved yet.</p>
        <button type="button" onclick="sendClaim(${res.data.offer})">Accept ${res.data.offer}</button>
-       <button type="button" class="secondary" onclick="document.getElementById('offer').classList.add('hidden')">No thanks</button>`;
+       <button type="button" class="button-quiet" onclick="document.getElementById('offer').classList.add('hidden')">No thanks</button>`;
     offerBox.classList.remove('hidden');
     showMessage('claim-message', '', '');
   } else {

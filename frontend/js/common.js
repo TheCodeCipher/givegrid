@@ -34,13 +34,16 @@ function logout() {
 function requireRole(role) {
   const user = getUser();
   if (!user || user.role !== role) {
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
     return null;
   }
-  document.getElementById('who').textContent = `${user.name} (${user.role})`;
+  document.getElementById('who').textContent = `${user.name}, ${ROLE_NAMES[user.role]}`;
   document.getElementById('logout').addEventListener('click', logout);
   return user;
 }
+
+// Friendly names for the three account types.
+const ROLE_NAMES = { DONOR: 'donor', NGO: 'NGO', ADMIN: 'administrator' };
 
 // Where each kind of account lands after logging in.
 function homePageFor(role) {
@@ -103,7 +106,9 @@ function showTable(boxId, items, headings, makeCells, emptyText) {
   }
   const head = headings.map((h) => `<th>${h}</th>`).join('');
   const rows = items.map((item) => {
-    const cells = makeCells(item).map((cell) => `<td>${cell}</td>`).join('');
+    // data-label = the column name. On phones the CSS shows it above each value,
+    // because the table turns into one small card per row.
+    const cells = makeCells(item).map((cell, i) => `<td data-label="${headings[i]}">${cell}</td>`).join('');
     return `<tr>${cells}</tr>`;
   }).join('');
   box.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
@@ -114,6 +119,40 @@ function showMessage(boxId, text, type) {
   const box = document.getElementById(boxId);
   box.textContent = text;
   box.className = type;
+}
+
+
+// ---------- Tabs: show one section at a time --------------------------
+// The page has buttons  <button class="tab" data-tab="needs">  and sections
+// <section class="panel" data-panel="needs">. Clicking a tab shows the section
+// with the same name and hides the others (instead of one very long page).
+function setupTabs() {
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => showTab(tab.dataset.tab));
+  });
+  showTab(tabs[0].dataset.tab);                 // start on the first tab
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((tab) => {
+    const isActive = tab.dataset.tab === name;
+    tab.classList.toggle('active', isActive);   // underline the chosen tab
+    tab.setAttribute('aria-selected', isActive); // tells screen readers which one is chosen
+  });
+  document.querySelectorAll('.panel').forEach((panel) => {
+    panel.classList.toggle('hidden', panel.dataset.panel !== name);
+  });
+}
+
+// Shows a number next to a tab name (e.g. "Claims 2"). 0 shows nothing.
+function setCount(elementId, number) {
+  document.getElementById(elementId).textContent = number > 0 ? number : '';
+}
+
+// "1 listing" / "3 listings"
+function plural(number, word) {
+  return `${number} ${word}${number === 1 ? '' : 's'}`;
 }
 
 
@@ -138,8 +177,9 @@ function getParam(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
 
+// Short, readable date and time, e.g. "22 Nov, 7:29 pm".
 function formatDate(value) {
-  return new Date(value).toLocaleString();
+  return new Date(value).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 }
 
 // A coloured label for statuses like HELD, VERIFIED, HIGH.

@@ -3,47 +3,106 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GiveGrid — Log in</title>
+  <title>GiveGrid — usable goods, matched with NGOs that need them</title>
+  <meta name="description" content="Donors list usable goods they no longer need. Verified NGOs claim exactly what they can use.">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-  <header class="topbar"><span class="brand">GiveGrid</span></header>
+<body class="home">
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span><span></span></span>GiveGrid</a>
+    <a id="nav-login" class="button button-quiet" href="login.html">Log in</a>
+    <a id="nav-dashboard" class="button hidden" href="login.html">Your dashboard</a>
+  </header>
 
-  <main class="page">
-    <h1>GiveGrid</h1>
-    <p class="lead">Connecting available resources with verified community needs.</p>
-    <p class="muted" id="server-status">Checking the server…</p>
+  <main>
+    <!-- Hero: what GiveGrid does, and the grid that shows it -->
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <h1>Your spare chairs, laptops and blankets, matched with NGOs that need them.</h1>
+          <p class="lead">Offices, hotels, event organisers and households list what they no longer need.
+            Verified NGOs say what they are short of. GiveGrid ranks the matches and reserves exactly
+            what is available, so no item is ever promised twice.</p>
+          <div class="actions">
+            <a class="button" href="login.html?mode=register&amp;role=DONOR">List items to give</a>
+            <a class="button button-quiet" href="login.html?mode=register&amp;role=NGO">Register an NGO</a>
+          </div>
+          <p class="login-line muted">Already have an account? <a href="login.html">Log in</a></p>
+        </div>
 
-    <div class="two-columns">
-      <form id="login-form" class="card">
-        <h2>Log in</h2>
-        <label>Email <input type="email" name="email" required></label>
-        <label>Password <input type="password" name="password" required></label>
-        <button type="submit">Log in</button>
-        <p id="login-message"></p>
-      </form>
+        <figure class="unit-grid">
+          <div id="squares" class="squares" aria-hidden="true"></div>
+          <figcaption>One donation of <strong>100 office chairs</strong>, split between three NGOs.
+            Each square is one chair. Nobody can claim the 101st.</figcaption>
+          <ul class="legend">
+            <li><span class="key a"></span>Asha Learning Centre, 40</li>
+            <li><span class="key b"></span>Nayi Disha Shelter, 40</li>
+            <li><span class="key c"></span>Green Sprouts School, 20</li>
+          </ul>
+        </figure>
+      </div>
+    </section>
 
-      <form id="register-form" class="card">
-        <h2>Create an account</h2>
-        <label>Your name <input name="name" required></label>
-        <label>Email <input type="email" name="email" required></label>
-        <label>Password (8+ characters) <input type="password" name="password" minlength="8" required></label>
-        <label>I am
-          <select name="role">
-            <option value="DONOR">a donor (I have goods to give)</option>
-            <option value="NGO">an NGO (we need goods)</option>
-          </select>
-        </label>
-        <button type="submit">Register</button>
-        <p id="register-message"></p>
-      </form>
-    </div>
+    <!-- How it works: a real sequence, so the steps are numbered -->
+    <section class="how">
+      <div class="wrap">
+        <h2>How it works</h2>
+        <ol class="steps">
+          <li><h3>List what you are giving</h3><p>Say what it is, how many, its condition and which city it is in.</p></li>
+          <li><h3>NGOs see ranked matches</h3><p>Same category first, then donations that cover the whole need, then the nearest ones.</p></li>
+          <li><h3>Claim and confirm within 48 hours</h3><p>A claim holds the items for two days. If not enough is left, GiveGrid offers what is.</p></li>
+          <li><h3>Hand over and confirm receipt</h3><p>Pickup, delivery and receipt are recorded in a history that cannot be edited.</p></li>
+        </ol>
+      </div>
+    </section>
 
-    <p class="muted">Demo accounts after <code>npm run seed</code> (password <code>password123</code>):
-      donor@givegrid.local · ngo@givegrid.local · admin@givegrid.local</p>
+    <!-- The two kinds of user -->
+    <section class="sides">
+      <div class="wrap">
+        <div class="side donor">
+          <h2>For donors</h2>
+          <ul>
+            <li>List furniture, electronics, books, clothing and more</li>
+            <li>See which NGOs need your items most</li>
+            <li>One donation can go to several NGOs</li>
+            <li>Record the handover when it is collected</li>
+          </ul>
+          <a class="button" href="login.html?mode=register&amp;role=DONOR">Create a donor account</a>
+        </div>
+        <div class="side ngo">
+          <h2>For NGOs</h2>
+          <ul>
+            <li>Post what you need and how urgently</li>
+            <li>Get donations ranked by fit and distance</li>
+            <li>Claim exactly the quantity you can use</li>
+            <li>Every NGO is checked by an administrator first</li>
+          </ul>
+          <a class="button" href="login.html?mode=register&amp;role=NGO">Register your NGO</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- What GiveGrid guarantees -->
+    <section class="promises">
+      <div class="wrap">
+        <h2>Built so nothing goes missing</h2>
+        <div class="list">
+          <div><h3>Nothing promised twice</h3><p>When two NGOs claim the last items at the same moment, only one gets them. The other is offered what is left.</p></div>
+          <div><h3>Holds that expire</h3><p>Claims not confirmed within 48 hours are released automatically, so items never sit reserved for nobody.</p></div>
+          <div><h3>A history no one can rewrite</h3><p>Every step of every donation is recorded permanently. The database itself refuses changes to it.</p></div>
+        </div>
+      </div>
+    </section>
   </main>
 
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>GiveGrid, a Full Stack Development course project by Tarun Das and Arkodyuti Bhattacharyya.</span>
+      <span id="server-status">Checking the server…</span>
+    </div>
+  </footer>
+
   <script src="js/common.js"></script>
-  <script src="js/index.js"></script>
+  <script src="js/home.js"></script>
 </body>
 </html>

@@ -1,28 +1,49 @@
 // donor.js — the donor dashboard.
 
 requireRole('DONOR');
+setupTabs();
+
+// The "List an item" button at the top opens the form tab.
+document.getElementById('new-donation').addEventListener('click', () => showTab('new'));
 
 async function loadDonations() {
   showLoading('donations');
   const res = await api('GET', '/donations?mine=true&limit=100');
-  if (!res.ok) return showError('donations', res.data.error);
+  if (!res.ok) {
+    document.getElementById('summary').textContent = '';
+    return showError('donations', res.data.error);
+  }
+
+  // One-line summary at the top, worked out from the list the server sent.
+  let unitsLeft = 0;
+  for (const d of res.data) {
+    if (d.status === 'OPEN') {
+      unitsLeft = unitsLeft + d.available_quantity;
+    }
+  }
+  document.getElementById('summary').textContent =
+    `${plural(res.data.length, 'listing')}, ${plural(unitsLeft, 'item')} still available to claim.`;
 
   showTable('donations', res.data,
-    ['Item', 'Category', 'Available / Total', 'Status', ''],
+    ['Item', 'Category', 'Available', 'Status', ''],
     (d) => [
-      esc(d.title),
+      `<strong>${esc(d.title)}</strong>`,
       esc(d.category_name),
-      `${d.available_quantity} / ${d.total_quantity} ${esc(d.unit)}`,
+      `${d.available_quantity} of ${d.total_quantity} ${esc(d.unit)}`,
       badge(d.status),
-      `<a href="donation.html?id=${d.id}">Details &amp; history</a>`,
+      `<a href="donation.html?id=${d.id}">Details and history</a>`,
     ],
-    'You have not listed anything yet. Use the form below.');
+    'You have not listed anything yet. Use “List an item” to add your first donation.');
 }
 
 async function loadClaims() {
   showLoading('claims');
   const res = await api('GET', '/claims');
   if (!res.ok) return showError('claims', res.data.error);
+
+  // The number on the tab = claims waiting for the donor to record pickup.
+  const waiting = res.data.filter((c) => c.status === 'CONFIRMED').length;
+  setCount('claims-count', waiting);
 
   showTable('claims', res.data,
     ['Donation', 'NGO', 'Quantity', 'Status', ''],
@@ -64,9 +85,10 @@ document.getElementById('donation-form').addEventListener('submit', async (event
   const res = await api('POST', '/donations', data);
   if (!res.ok) return showMessage('form-message', res.data.error, 'error');
 
-  showMessage('form-message', 'Donation listed.', 'success');
+  showMessage('form-message', '', '');
   event.target.reset();
-  loadDonations();
+  await loadDonations();
+  showTab('donations');                          // show the new donation in the list
 });
 
 loadCategories('category');
