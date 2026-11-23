@@ -21,6 +21,10 @@ const { securityHeaders } = require('./security');
 
 const app = express();
 
+// Railway (and any host) puts a proxy in front of us. Trust ONE hop,
+// so req.ip is the visitor's real IP (from X-Forwarded-For), not the proxy's.
+app.set('trust proxy', 1);
+
 // Don't advertise "X-Powered-By: Express" (tells attackers what to target).
 app.disable('x-powered-by');
 
