@@ -19,7 +19,15 @@
         <h1 id="ngo-name">Your NGO</h1>
         <div id="profile" class="summary">Loading…</div>
       </div>
+      <a id="post-need-top" class="button hidden" href="#new" onclick="showTab('new')">Post a need</a>
     </div>
+
+    <!-- Shown when the NGO is not verified yet: the three steps to get started -->
+    <ol id="onboarding" class="onboarding hidden">
+      <li id="step-register">Register your NGO</li>
+      <li id="step-verify">An administrator verifies it</li>
+      <li id="step-start">Post needs and claim donations</li>
+    </ol>
 
     <!-- Shown only when the NGO has no profile yet -->
     <form id="ngo-form" class="card form-card stack hidden">
@@ -36,6 +44,22 @@
 
     <!-- Shown only when the NGO is VERIFIED -->
     <div id="verified-area" class="hidden">
+      <!-- Overview: four numbers. Each one is a button that opens the matching list. -->
+      <div class="stats">
+        <button class="stat stat-turn" onclick="openClaims('turn')">
+          <strong id="stat-turn">–</strong><span>claims waiting for you</span>
+        </button>
+        <button class="stat" onclick="openClaims('waiting')">
+          <strong id="stat-waiting">–</strong><span>waiting for a donor</span>
+        </button>
+        <button class="stat" onclick="openClaims('done')">
+          <strong id="stat-done">–</strong><span>finished claims</span>
+        </button>
+        <button class="stat" onclick="showTab('needs')">
+          <strong id="stat-needs">–</strong><span>needs still open</span>
+        </button>
+      </div>
+
       <nav class="tabs" role="tablist">
         <button class="tab" data-tab="claims" role="tab">My claims <span id="claims-count" class="count"></span></button>
         <button class="tab" data-tab="needs" role="tab">My needs</button>
@@ -43,19 +67,29 @@
       </nav>
 
       <section class="panel" data-panel="claims">
-        <p class="panel-intro">Confirm your pickup plan within 48 hours of claiming, or the items are released for other NGOs.</p>
-        <div id="claims"></div>
-        <p id="claim-message"></p>
+        <p class="panel-intro">A claim moves through five steps. You confirm the pickup plan within 48 hours,
+          the donor records the pickup, then you mark it delivered and confirm receipt.</p>
+        <!-- Filter buttons: show one group of claims at a time -->
+        <div class="chips" role="group" aria-label="Show claims">
+          <button class="chip" data-filter="turn" onclick="setFilter('turn')">Your turn <span>0</span></button>
+          <button class="chip" data-filter="waiting" onclick="setFilter('waiting')">Waiting for donor <span>0</span></button>
+          <button class="chip" data-filter="done" onclick="setFilter('done')">Finished <span>0</span></button>
+          <button class="chip" data-filter="all" onclick="setFilter('all')">All <span>0</span></button>
+        </div>
+        <div id="claims-list"></div>
       </section>
 
       <section class="panel" data-panel="needs">
-        <p class="panel-intro">Open a need to see donations ranked for it and claim one.</p>
-        <div id="needs"></div>
+        <p class="panel-intro">To claim items, press <strong>Find donations</strong> next to a need.
+          You'll see donations ranked for it and choose how many to take.</p>
+        <div id="needs-list"></div>
       </section>
 
       <section class="panel" data-panel="new">
         <form id="need-form" class="card form-card stack">
           <h2>Post a need</h2>
+          <p class="muted">Donors see your open needs, most urgent first. After posting, use
+            <strong>Find donations</strong> to claim matching items.</p>
           <label>What do you need? <input name="title" placeholder="e.g. Chairs for a classroom" required></label>
           <label>Category <select name="category_id" id="category" required></select></label>
           <div class="row">

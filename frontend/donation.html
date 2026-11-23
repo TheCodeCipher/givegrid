@@ -20,22 +20,30 @@
       <section>
         <div id="details"><p class="muted">Loading…</p></div>
 
-        <!-- Only for the donor who owns this donation -->
-        <div id="best-needs-area" class="hidden">
-          <h2>NGOs that need this most</h2>
-          <p class="panel-intro">Score: urgency (+30 high, +15 medium), covers their whole need (+30), nearby (+20 same area, +10 same city).</p>
-          <div id="best-needs"></div>
-        </div>
+        <!-- Tabs: only the donor who owns this donation sees them (and the second tab). -->
+        <nav id="donation-tabs" class="tabs hidden" role="tablist">
+          <button class="tab" data-tab="history" role="tab">History</button>
+          <button class="tab" data-tab="best" role="tab">NGOs that need this most</button>
+        </nav>
 
-        <h2>History</h2>
-        <p class="panel-intro">Every step is recorded permanently and cannot be changed.</p>
-        <div id="history"></div>
+        <section class="panel" data-panel="history">
+          <h2 class="panel-title">History</h2>
+          <p class="panel-intro">Every step is recorded permanently and cannot be changed. Oldest first.</p>
+          <div id="history-list"></div>
+        </section>
+
+        <section class="panel hidden" data-panel="best">
+          <p class="panel-intro">Verified NGOs whose open needs fit this donation. Score: urgency (+30 high, +15 medium),
+            covers their whole need (+30), nearby (+20 same area, +10 same city). They find your donation in their own matches.</p>
+          <div id="best-needs"></div>
+        </section>
       </section>
 
       <!-- Only for the donor who owns this donation -->
       <aside id="owner-area" class="side-panel hidden">
         <form id="edit-form" class="card stack">
           <h2>Edit details</h2>
+          <p class="muted">You can change the title and description. To give a different quantity, list a new item.</p>
           <label>Title <input name="title" id="edit-title" required></label>
           <label>Description <textarea name="description" id="edit-description" rows="3"></textarea></label>
           <div class="actions">

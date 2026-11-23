@@ -17,9 +17,25 @@
     <div class="page-head">
       <div>
         <h1>Your donations</h1>
-        <p id="summary" class="summary">Loading…</p>
+        <p class="summary">List what you're giving. Verified NGOs claim it, then you record the pickup.</p>
       </div>
-      <button type="button" id="new-donation">List an item</button>
+      <a class="button" href="#new" onclick="showTab('new')">List an item</a>
+    </div>
+
+    <!-- Overview: four numbers. Each one is a button that opens the matching list. -->
+    <div class="stats">
+      <button class="stat stat-turn" onclick="openClaims('turn')">
+        <strong id="stat-turn">–</strong><span>pickups to record</span>
+      </button>
+      <button class="stat" onclick="openClaims('waiting')">
+        <strong id="stat-waiting">–</strong><span>claims in progress</span>
+      </button>
+      <button class="stat" onclick="showTab('donations')">
+        <strong id="stat-open">–</strong><span>open listings</span>
+      </button>
+      <button class="stat" onclick="showTab('donations')">
+        <strong id="stat-items">–</strong><span>items still free to claim</span>
+      </button>
     </div>
 
     <nav class="tabs" role="tablist">
@@ -30,18 +46,26 @@
     </nav>
 
     <section class="panel" data-panel="donations">
-      <div id="donations"></div>
+      <p class="panel-intro">Open a donation to see its history, edit it, or see which NGOs need it most.</p>
+      <div id="donations-list"></div>
     </section>
 
     <section class="panel" data-panel="claims">
-      <p class="panel-intro">When an NGO has confirmed a claim and collected the items, press “Record pickup”.</p>
-      <div id="claims"></div>
-      <p id="claim-message"></p>
+      <p class="panel-intro">NGOs claim your items and confirm a pickup plan. When they collect,
+        press <strong>Record pickup</strong>. They then confirm delivery and receipt.</p>
+      <div class="chips" role="group" aria-label="Show handovers">
+        <button class="chip" data-filter="turn" onclick="setFilter('turn')">Your turn <span>0</span></button>
+        <button class="chip" data-filter="waiting" onclick="setFilter('waiting')">Waiting for NGO <span>0</span></button>
+        <button class="chip" data-filter="done" onclick="setFilter('done')">Finished <span>0</span></button>
+        <button class="chip" data-filter="all" onclick="setFilter('all')">All <span>0</span></button>
+      </div>
+      <div id="claims-list"></div>
     </section>
 
     <section class="panel" data-panel="new">
       <form id="donation-form" class="card form-card stack">
         <h2>List an item</h2>
+        <p class="muted">Verified NGOs that need this category will see it ranked in their matches.</p>
         <label>Title <input name="title" placeholder="e.g. Stackable office chairs" required></label>
         <label>Description <textarea name="description" rows="2" placeholder="Condition, size, anything an NGO should know"></textarea></label>
         <label>Category <select name="category_id" id="category" required></select></label>
@@ -59,8 +83,9 @@
     </section>
 
     <section class="panel" data-panel="needs">
-      <p class="panel-intro">Open requests from verified NGOs, most urgent first.</p>
-      <div id="needs"></div>
+      <p class="panel-intro">Open requests from verified NGOs, most urgent first. If you have something
+        that fits, list it: the NGO will find it in its matches.</p>
+      <div id="needs-list"></div>
     </section>
   </main>
 

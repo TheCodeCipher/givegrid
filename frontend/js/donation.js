@@ -34,6 +34,7 @@ async function loadDetails() {
     <div class="page-head"><h1>${esc(d.title)}</h1>${badge(d.status)}</div>
     <div class="card">
       <p class="stock"><strong>${d.available_quantity}</strong> of ${d.total_quantity} ${esc(d.unit)} still available</p>
+      <progress value="${d.total_quantity - d.available_quantity}" max="${d.total_quantity}"></progress>
       <p>${esc(d.description) || '<span class="muted">No description.</span>'}</p>
       <p class="muted">${esc(d.category_name)}, in ${esc(d.city)}. Donated by ${esc(d.donor_name)}.</p>
     </div>`;
@@ -41,7 +42,13 @@ async function loadDetails() {
   // The owner sees the edit form and the best NGOs for this donation.
   if (user.role === 'DONOR' && user.id === d.donor_id) {
     document.getElementById('owner-area').classList.remove('hidden');
-    document.getElementById('best-needs-area').classList.remove('hidden');
+    // Only once: the first time the details load, turn on the owner's tabs.
+    const tabs = document.getElementById('donation-tabs');
+    if (tabs.classList.contains('hidden')) {
+      tabs.classList.remove('hidden');
+      document.body.classList.add('owner');       // CSS hides the "History" heading (the tab says it)
+      setupTabs();
+    }
     document.getElementById('edit-title').value = d.title;
     document.getElementById('edit-description').value = d.description || '';
     document.getElementById('close-button').classList.toggle('hidden', d.status === 'CLOSED');
@@ -50,11 +57,11 @@ async function loadDetails() {
 }
 
 async function loadHistory() {
-  showLoading('history');
+  showLoading('history-list');
   const res = await api('GET', `/donations/${donationId}/events`);
-  if (!res.ok) return showError('history', res.data.error);
+  if (!res.ok) return showError('history-list', res.data.error);
 
-  showTable('history', res.data,
+  showTable('history-list', res.data,
     ['#', 'What happened', 'Quantity', 'By', 'When'],
     (e) => [e.seq, LABELS[e.action] || e.action, e.quantity === null ? '' : e.quantity,
       esc(e.actor_name || 'GiveGrid (automatic)'), formatDate(e.created_at)],
@@ -66,8 +73,8 @@ async function loadBestNeeds() {
   const res = await api('GET', `/donations/${donationId}/matching-needs`);
   if (!res.ok) return showError('best-needs', res.data.error);
 
-  showTable('best-needs', res.data.slice(0, 10),
-    ['Score', 'Urgency', 'NGO', 'Need', 'Still needed', 'Where'],
+  showTable('best-needs', res.data,
+    ['Match score (out of 80)', 'Urgency', 'NGO', 'Need', 'Still needed', 'Where'],
     (n) => [`<strong>${n.score}</strong>`, badge(n.urgency), esc(n.ngo_name), esc(n.title),
       `${n.remaining_quantity} ${esc(n.unit)}`, esc(n.city)],
     'No verified NGO needs this yet.');
@@ -76,13 +83,21 @@ async function loadBestNeeds() {
 document.getElementById('edit-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const res = await api('PATCH', `/donations/${donationId}`, formData(event.target));
-  showMessage('edit-message', res.ok ? 'Saved.' : res.data.error, res.ok ? 'success' : 'error');
+  if (res.ok) {
+    showMessage('edit-message', '', '');
+    toast('Changes saved.', 'success');
+  } else {
+    showMessage('edit-message', res.data.error, 'error');
+  }
   loadDetails();
 });
 
 document.getElementById('close-button').addEventListener('click', async () => {
+  if (!confirm('Stop new claims on this donation? Claims already made carry on normally.')) {
+    return;
+  }
   const res = await api('POST', `/donations/${donationId}/close`);
-  showMessage('edit-message', res.ok ? 'New claims stopped. Existing claims continue normally.' : res.data.error, res.ok ? 'success' : 'error');
+  toast(res.ok ? 'New claims stopped. Existing claims continue normally.' : res.data.error, res.ok ? 'success' : 'error');
   loadDetails();
   loadHistory();
 });

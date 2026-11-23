@@ -17,19 +17,19 @@
     <div class="page-head">
       <div>
         <h1>NGO verification</h1>
-        <p class="summary">Check each NGO before it can post needs or claim donations.</p>
+        <p class="summary">Check each NGO before it can post needs or claim donations.
+          Verified NGOs can start at once; rejected ones can be verified later if you change your mind.</p>
       </div>
     </div>
 
     <!-- One tab per status: each shows the same table, filtered by that status. -->
     <nav class="tabs" role="tablist">
-      <button class="tab" data-tab="PENDING" role="tab">Waiting</button>
+      <button class="tab" data-tab="PENDING" role="tab">Waiting <span id="pending-count" class="count"></span></button>
       <button class="tab" data-tab="VERIFIED" role="tab">Verified</button>
       <button class="tab" data-tab="REJECTED" role="tab">Rejected</button>
     </nav>
 
     <div id="ngos"></div>
-    <p id="message"></p>
   </main>
 
   <script src="js/common.js"></script>

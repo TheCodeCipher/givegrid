@@ -4,10 +4,19 @@ requireRole('ADMIN');
 
 let currentStatus = 'PENDING';               // which tab is open
 
+// admin.html#VERIFIED opens the "Verified" tab (used by the home page shortcut).
+const fromAddress = window.location.hash.slice(1);
+if (['PENDING', 'VERIFIED', 'REJECTED'].includes(fromAddress)) {
+  currentStatus = fromAddress;
+}
+
 async function loadNgos() {
   showLoading('ngos');
   const res = await api('GET', `/admin/ngos?status=${currentStatus}`);
   if (!res.ok) return showError('ngos', res.data.error);
+  if (currentStatus === 'PENDING') {
+    setCount('pending-count', res.data.length);   // the number on the "Waiting" tab
+  }
 
   const emptyText = {
     PENDING: 'No NGOs are waiting for verification.',
@@ -16,20 +25,25 @@ async function loadNgos() {
   };
 
   showTable('ngos', res.data,
-    ['NGO', 'Contact', 'City', 'Status', ''],
+    // No "Status" column: the open tab already says which status these are.
+    ['NGO', 'Contact email', 'City', ''],
     (g) => [
-      `<strong>${esc(g.name)}</strong>`, esc(g.email), esc(g.city), badge(g.status),
+      `<strong>${esc(g.name)}</strong>`, esc(g.email), esc(g.city),
       '<div class="actions">' +
-      (g.status !== 'VERIFIED' ? `<button onclick="setStatus(${g.id}, 'VERIFIED')">Verify</button>` : '') +
-      (g.status !== 'REJECTED' ? `<button class="danger" onclick="setStatus(${g.id}, 'REJECTED')">Reject</button>` : '') +
+      (g.status !== 'VERIFIED' ? `<button class="button-small" onclick="setStatus(${g.id}, 'VERIFIED', this)">Verify</button>` : '') +
+      (g.status !== 'REJECTED' ? `<button class="button-small danger" onclick="setStatus(${g.id}, 'REJECTED', this)">Reject</button>` : '') +
       '</div>',
     ],
     emptyText[currentStatus]);
 }
 
-async function setStatus(ngoId, status) {
+async function setStatus(ngoId, status, button) {
+  if (status === 'REJECTED' && !confirm('Reject this NGO? It will not be able to post needs or claim donations.')) {
+    return;
+  }
+  button.disabled = true;                    // no double clicks while we wait
   const res = await api('PATCH', `/admin/ngos/${ngoId}/verification`, { status: status });
-  showMessage('message', res.ok ? `${res.data.name} is now ${res.data.status.toLowerCase()}.` : res.data.error, res.ok ? 'success' : 'error');
+  toast(res.ok ? `${res.data.name} is now ${res.data.status.toLowerCase()}.` : res.data.error, res.ok ? 'success' : 'error');
   loadNgos();
 }
 

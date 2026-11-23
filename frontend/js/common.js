@@ -4,8 +4,9 @@
 // Sections:
 //   1. login storage      (saveLogin, getUser, logout, requireRole)
 //   2. api()              (the ONE function that talks to the backend)
-//   3. showing things     (loading / error / empty / table, messages)
+//   3. showing things     (loading / error / empty / table, messages, toast)
 //   4. small helpers      (esc, formData, getParam, formatDate, badge)
+//   5. claims             (progress tracker, whose turn it is, filters)
 // =====================================================================
 
 
@@ -85,9 +86,16 @@ async function api(method, path, body) {
 // ---------- 3. Showing things: loading, error, empty, table ----------
 // Conditional rendering: every list shows a loading state, an error state,
 // and an empty state, so the user always knows what is happening.
+//
+// NO FLICKER: "Loading…" is shown only the FIRST time a box fills. When a
+// list is refreshed (e.g. after pressing a button) the old rows stay on screen
+// until the new ones arrive, so the page never shrinks and grows again.
 
 function showLoading(boxId) {
-  document.getElementById(boxId).innerHTML = '<p class="muted">Loading…</p>';
+  const box = document.getElementById(boxId);
+  if (box.innerHTML.trim() === '') {
+    box.innerHTML = '<p class="muted loading">Loading…</p>';
+  }
 }
 
 function showError(boxId, message) {
@@ -104,14 +112,22 @@ function showTable(boxId, items, headings, makeCells, emptyText) {
     box.innerHTML = `<p class="empty">${esc(emptyText)}</p>`;
     return;
   }
+  // Remember how far the list was scrolled, so a refresh doesn't jump back to the top.
+  const oldScroll = box.querySelector('.table-scroll');
+  const scrollTop = oldScroll ? oldScroll.scrollTop : 0;
+
   const head = headings.map((h) => `<th>${h}</th>`).join('');
   const rows = items.map((item) => {
     // data-label = the column name. On phones the CSS shows it above each value,
     // because the table turns into one small card per row.
     const cells = makeCells(item).map((cell, i) => `<td data-label="${headings[i]}">${cell}</td>`).join('');
-    return `<tr>${cells}</tr>`;
+    // data-id lets a page find a row again, e.g. to highlight the chosen donation.
+    return `<tr data-id="${Number(item.id) || ''}">${cells}</tr>`;
   }).join('');
-  box.innerHTML = `<table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+  // .table-scroll = a box with a fixed maximum height: long lists scroll INSIDE it
+  // (with the column titles staying visible) instead of making the page very long.
+  box.innerHTML = `<div class="table-scroll"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  box.querySelector('.table-scroll').scrollTop = scrollTop;
 }
 
 // A message under a form. type: 'error' or 'success'.
@@ -121,17 +137,50 @@ function showMessage(boxId, text, type) {
   box.className = type;
 }
 
+// A short message that floats in the corner for a few seconds ("toast").
+// Used for the result of a button press. It floats OVER the page, so it
+// never pushes the tables down (that was one cause of the flicker).
+let toastTimer = null;
+function toast(text, type) {
+  let box = document.getElementById('toast');
+  if (!box) {                                    // made once, the first time it's needed
+    box = document.createElement('div');
+    box.id = 'toast';
+    box.setAttribute('role', 'status');          // screen readers read it out
+    document.body.appendChild(box);
+  }
+  box.textContent = text;
+  box.className = `toast ${type} show`;
+  clearTimeout(toastTimer);                      // a new message restarts the timer
+  toastTimer = setTimeout(() => box.classList.remove('show'), 5000);
+}
+
 
 // ---------- Tabs: show one section at a time --------------------------
 // The page has buttons  <button class="tab" data-tab="needs">  and sections
 // <section class="panel" data-panel="needs">. Clicking a tab shows the section
 // with the same name and hides the others (instead of one very long page).
+// The open tab is also written in the address (ngo.html#claims), so a link or
+// a page reload opens the same tab.
 function setupTabs() {
   const tabs = document.querySelectorAll('.tab');
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => showTab(tab.dataset.tab));
   });
-  showTab(tabs[0].dataset.tab);                 // start on the first tab
+  showTab(tabFromAddress() || tabs[0].dataset.tab);
+  // If only the "#..." part of the address changes (a link on the same page,
+  // or typing it), switch to that tab too.
+  window.addEventListener('hashchange', () => {
+    const name = tabFromAddress();
+    if (name) showTab(name);
+  });
+}
+
+// The tab named in the address ("ngo.html#claims" -> "claims"), if this page has it.
+function tabFromAddress() {
+  const name = window.location.hash.slice(1);
+  const exists = document.querySelector(`.tab[data-tab="${CSS.escape(name)}"]`);
+  return exists ? name : null;
 }
 
 function showTab(name) {
@@ -143,6 +192,7 @@ function showTab(name) {
   document.querySelectorAll('.panel').forEach((panel) => {
     panel.classList.toggle('hidden', panel.dataset.panel !== name);
   });
+  history.replaceState(null, '', '#' + name);   // update the address without reloading
 }
 
 // Shows a number next to a tab name (e.g. "Claims 2"). 0 shows nothing.
@@ -197,4 +247,86 @@ async function loadCategories(selectId) {
   }
   select.innerHTML = '<option value="">Choose a category</option>' +
     res.data.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+}
+
+
+// ---------- 5. Claims: where is it, and whose turn is it? -------------
+// A claim moves through these five steps (the same order as rules.js STEPS).
+const CLAIM_STEPS = ['HELD', 'CONFIRMED', 'PICKED_UP', 'DELIVERED', 'RECEIVED'];
+const STEP_NAMES = { HELD: 'Claimed', CONFIRMED: 'Confirmed', PICKED_UP: 'Picked up', DELIVERED: 'Delivered', RECEIVED: 'Received' };
+
+// Which statuses mean "it's YOUR turn to press something", per account type.
+const YOUR_TURN = {
+  NGO: ['HELD', 'PICKED_UP', 'DELIVERED'],
+  DONOR: ['CONFIRMED'],
+};
+const FINISHED = ['RECEIVED', 'CANCELLED', 'EXPIRED'];
+
+// Which group a claim belongs to, for the filter buttons above the list.
+function claimGroup(claim, role) {
+  if (YOUR_TURN[role].includes(claim.status)) return 'turn';
+  if (FINISHED.includes(claim.status)) return 'done';
+  return 'waiting';
+}
+
+// One plain sentence: what happens next, and who does it.
+function nextStep(claim, role) {
+  if (claim.status === 'CANCELLED') return 'Cancelled. The items went back to the donation.';
+  if (claim.status === 'EXPIRED') return 'Not confirmed within 48 hours, so the items were released.';
+  if (claim.status === 'RECEIVED') return 'Finished. The NGO confirmed it received the items.';
+
+  const sentences = {
+    NGO: {
+      HELD: `Your turn: confirm your pickup plan (${timeLeft(claim.expires_at)}).`,
+      CONFIRMED: 'Waiting for the donor to record the pickup.',
+      PICKED_UP: 'Your turn: mark it delivered when it arrives.',
+      DELIVERED: 'Your turn: confirm you received everything.',
+    },
+    DONOR: {
+      HELD: `Waiting for the NGO to confirm a pickup plan (${timeLeft(claim.expires_at)}).`,
+      CONFIRMED: 'Your turn: record the pickup when the NGO collects.',
+      PICKED_UP: 'On its way to the NGO.',
+      DELIVERED: 'Delivered. Waiting for the NGO to confirm receipt.',
+    },
+  };
+  return sentences[role][claim.status];
+}
+
+// The progress tracker: five small steps, the finished ones filled in.
+// Cancelled and expired claims stopped early, so they show a label instead.
+function claimTracker(claim) {
+  if (claim.status === 'CANCELLED' || claim.status === 'EXPIRED') {
+    return badge(claim.status);
+  }
+  const reached = CLAIM_STEPS.indexOf(claim.status);       // 0 for HELD ... 4 for RECEIVED
+  const steps = CLAIM_STEPS.map((step, i) => {
+    let state = 'todo';
+    if (i < reached) state = 'done';
+    if (i === reached) state = 'current';
+    return `<li class="${state}">${STEP_NAMES[step]}</li>`;
+  }).join('');
+  return `<ol class="tracker" aria-label="Claim progress">${steps}</ol>`;
+}
+
+// "31 h left" / "45 min left" until a hold expires. Only for display:
+// the server decides when it has really expired.
+function timeLeft(value) {
+  const minutes = Math.round((new Date(value) - Date.now()) / 60000);
+  if (minutes <= 0) return 'time is up';
+  if (minutes < 60) return `${minutes} min left`;
+  return `${Math.floor(minutes / 60)} h left`;
+}
+
+// Fills in the numbers on the filter buttons and marks the chosen one.
+// Each button looks like <button class="chip" data-filter="turn">Your turn <span>3</span></button>
+function updateChips(claims, role, chosen) {
+  const counts = { turn: 0, waiting: 0, done: 0, all: claims.length };
+  for (const c of claims) {
+    counts[claimGroup(c, role)] = counts[claimGroup(c, role)] + 1;
+  }
+  document.querySelectorAll('.chip').forEach((chip) => {
+    chip.querySelector('span').textContent = counts[chip.dataset.filter];
+    chip.classList.toggle('active', chip.dataset.filter === chosen);
+  });
+  return counts;
 }

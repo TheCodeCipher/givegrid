@@ -14,32 +14,64 @@
   </header>
 
   <main class="app">
-    <a class="back" href="ngo.html">Back to your dashboard</a>
+    <a class="back" href="ngo.html#needs">Back to my needs</a>
     <div class="page-head">
-      <div id="need"><h1>Matching donations</h1></div>
+      <div id="need"><h1>Matching donations</h1><p class="summary">Loading…</p></div>
     </div>
+
+    <!-- How claiming works, in three steps. Step 1 or 2 is highlighted by matches.js. -->
+    <ol class="howto">
+      <li id="how-1" class="current"><strong>Choose a donation</strong> from the list. The best match is at the top.</li>
+      <li id="how-2"><strong>Say how many</strong> you want. If less is left, we offer what there is.</li>
+      <li id="how-3"><strong>Confirm your pickup plan</strong> on your dashboard within 48 hours.</li>
+    </ol>
 
     <div class="split">
       <section>
-        <p class="panel-intro">Only donations in the same category and unit are listed. Score: +30 if it covers
-          everything you still need, +20 if it is in the same area, +10 if it is in the same city.</p>
+        <p class="panel-intro">Only donations in the same category and unit are listed.
+          Each match shows why it ranks where it does.</p>
         <div id="matches"></div>
       </section>
 
+      <!-- The claim panel: always the same size, so nothing jumps when its content changes. -->
       <aside class="side-panel">
-        <div id="claim-hint" class="card">
-          <h2>Claim a donation</h2>
-          <p class="muted">Choose “Claim” next to a donation to reserve some of it for this need.</p>
-        </div>
+        <div class="card claim-panel">
+          <!-- State 1: nothing chosen yet -->
+          <div id="claim-hint">
+            <h2>Claim items</h2>
+            <p class="muted">Press <strong>Choose</strong> next to a donation. Its details and the claim
+              form will appear here.</p>
+          </div>
 
-        <!-- Shown after "Claim" is pressed on a row -->
-        <form id="claim-form" class="card stack hidden">
-          <h2>Claim: <span id="claim-title"></span></h2>
-          <label>How many? <input type="number" id="claim-quantity" min="1" step="1" required></label>
-          <div><button type="submit">Claim</button></div>
-          <div id="offer" class="offer hidden"></div>
-          <p id="claim-message"></p>
-        </form>
+          <!-- State 2: a donation is chosen -->
+          <form id="claim-form" class="stack hidden">
+            <h2 id="claim-title"></h2>
+            <dl class="facts">
+              <div><dt>Available</dt><dd id="fact-available"></dd></div>
+              <div><dt>You still need</dt><dd id="fact-needed"></dd></div>
+              <div><dt>Most you can get</dt><dd id="fact-most"></dd></div>
+            </dl>
+            <label>How many do you want? <input type="number" id="claim-quantity" min="1" step="1" required></label>
+            <div class="actions">
+              <button type="submit" id="claim-button">Claim</button>
+              <button type="button" class="button-quiet" onclick="resetPanel()">Choose another</button>
+            </div>
+            <div id="offer" class="offer hidden"></div>
+            <p id="claim-message"></p>
+          </form>
+
+          <!-- State 3: the claim worked -->
+          <div id="claim-done" class="hidden">
+            <h2>Reserved</h2>
+            <p id="done-text" class="success"></p>
+            <p class="muted">The items are held for you for 48 hours. Open <strong>My claims</strong> and press
+              <strong>Confirm pickup plan</strong>, or the items are released for other NGOs.</p>
+            <div class="actions">
+              <a class="button" href="ngo.html#claims">Go to my claims</a>
+              <button type="button" id="claim-another" class="button-quiet" onclick="resetPanel()">Claim from another donation</button>
+            </div>
+          </div>
+        </div>
       </aside>
     </div>
   </main>

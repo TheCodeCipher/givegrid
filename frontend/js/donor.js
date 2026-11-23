@@ -3,75 +3,108 @@
 requireRole('DONOR');
 setupTabs();
 
-// The "List an item" button at the top opens the form tab.
-document.getElementById('new-donation').addEventListener('click', () => showTab('new'));
+let claims = [];          // the claims on my donations, as the server last sent them
+let filter = null;        // which group of handovers is shown: 'turn', 'waiting', 'done' or 'all'
 
 async function loadDonations() {
-  showLoading('donations');
+  showLoading('donations-list');
   const res = await api('GET', '/donations?mine=true&limit=100');
-  if (!res.ok) {
-    document.getElementById('summary').textContent = '';
-    return showError('donations', res.data.error);
-  }
+  if (!res.ok) return showError('donations-list', res.data.error);
 
-  // One-line summary at the top, worked out from the list the server sent.
-  let unitsLeft = 0;
+  // Overview numbers, worked out from the list the server sent.
+  let openListings = 0;
+  let itemsLeft = 0;
   for (const d of res.data) {
     if (d.status === 'OPEN') {
-      unitsLeft = unitsLeft + d.available_quantity;
+      openListings = openListings + 1;
+      itemsLeft = itemsLeft + d.available_quantity;
     }
   }
-  document.getElementById('summary').textContent =
-    `${plural(res.data.length, 'listing')}, ${plural(unitsLeft, 'item')} still available to claim.`;
+  document.getElementById('stat-open').textContent = openListings;
+  document.getElementById('stat-items').textContent = itemsLeft;
 
-  showTable('donations', res.data,
-    ['Item', 'Category', 'Available', 'Status', ''],
+  showTable('donations-list', res.data,
+    ['Item', 'Claimed so far', 'Status', ''],
     (d) => [
-      `<strong>${esc(d.title)}</strong>`,
-      esc(d.category_name),
-      `${d.available_quantity} of ${d.total_quantity} ${esc(d.unit)}`,
+      `<strong>${esc(d.title)}</strong><span class="muted">${esc(d.category_name)}, ${esc(d.city)}</span>`,
+      // The bar fills up as NGOs claim items.
+      `<progress value="${d.total_quantity - d.available_quantity}" max="${d.total_quantity}"></progress>
+       <span class="muted">${d.available_quantity} of ${d.total_quantity} ${esc(d.unit)} still free</span>`,
       badge(d.status),
-      `<a href="donation.html?id=${d.id}">Details and history</a>`,
+      `<a class="button button-small button-quiet" href="donation.html?id=${d.id}">Details</a>`,
     ],
     'You have not listed anything yet. Use “List an item” to add your first donation.');
 }
 
+// ---------- Handovers (claims on my donations) ----------
 async function loadClaims() {
-  showLoading('claims');
+  showLoading('claims-list');
   const res = await api('GET', '/claims');
-  if (!res.ok) return showError('claims', res.data.error);
+  if (!res.ok) return showError('claims-list', res.data.error);
+  claims = res.data;
 
-  // The number on the tab = claims waiting for the donor to record pickup.
-  const waiting = res.data.filter((c) => c.status === 'CONFIRMED').length;
-  setCount('claims-count', waiting);
+  if (filter === null) {        // first time: open on "Your turn" if something is waiting
+    filter = claims.some((c) => claimGroup(c, 'DONOR') === 'turn') ? 'turn' : 'all';
+  }
+  const turn = claims.filter((c) => claimGroup(c, 'DONOR') === 'turn').length;
+  document.getElementById('stat-turn').textContent = turn;
+  document.getElementById('stat-waiting').textContent = claims.filter((c) => claimGroup(c, 'DONOR') === 'waiting').length;
+  setCount('claims-count', turn);
+  showClaims();
+}
 
-  showTable('claims', res.data,
-    ['Donation', 'NGO', 'Quantity', 'Status', ''],
+// Draws the handovers of the chosen group, from the list we already have.
+function showClaims() {
+  updateChips(claims, 'DONOR', filter);
+  const shown = filter === 'all' ? claims : claims.filter((c) => claimGroup(c, 'DONOR') === filter);
+  const emptyText = {
+    turn: 'No pickups to record right now.',
+    waiting: 'No claims in progress.',
+    done: 'No finished handovers yet.',
+    all: 'No NGO has claimed your donations yet.',
+  };
+
+  showTable('claims-list', shown,
+    ['Donation', 'NGO', 'Quantity', 'Progress', ''],
     (c) => [
-      esc(c.donation_title),
+      `<a href="donation.html?id=${c.donation_id}">${esc(c.donation_title)}</a>`,
       esc(c.ngo_name),
       `${c.quantity} ${esc(c.unit)}`,
-      badge(c.status),
+      `${claimTracker(c)}<span class="next">${esc(nextStep(c, 'DONOR'))}</span>`,
       // The button only appears when the SERVER says the claim is CONFIRMED.
-      c.status === 'CONFIRMED' ? `<button onclick="recordPickup(${c.id})">Record pickup</button>` : '',
+      c.status === 'CONFIRMED' ? `<button class="button-small" onclick="recordPickup(${c.id}, this)">Record pickup</button>` : '',
     ],
-    'No NGO has claimed your donations yet.');
+    emptyText[filter]);
 }
 
-async function recordPickup(claimId) {
+function setFilter(group) {
+  filter = group;
+  showClaims();
+}
+
+// A stat card was pressed: open the handovers tab with that group chosen.
+function openClaims(group) {
+  showTab('claims');
+  setFilter(group);
+}
+
+async function recordPickup(claimId, button) {
+  button.disabled = true;                        // no double clicks while we wait
   const res = await api('POST', `/claims/${claimId}/pickup`);
-  showMessage('claim-message', res.ok ? 'Pickup recorded.' : res.data.error, res.ok ? 'success' : 'error');
-  loadClaims();                                  // always show what the server now says
+  toast(res.ok ? 'Pickup recorded. The NGO will confirm delivery and receipt.' : res.data.error, res.ok ? 'success' : 'error');
+  await loadClaims();                            // always show what the server now says
 }
 
+// ---------- What NGOs need ----------
 async function loadNeeds() {
-  showLoading('needs');
+  showLoading('needs-list');
   const res = await api('GET', '/needs');
-  if (!res.ok) return showError('needs', res.data.error);
+  if (!res.ok) return showError('needs-list', res.data.error);
 
-  showTable('needs', res.data,
+  showTable('needs-list', res.data,
     ['Urgency', 'Need', 'NGO', 'Still needed', 'Where'],
-    (n) => [badge(n.urgency), esc(n.title), esc(n.ngo_name), `${n.remaining_quantity} ${esc(n.unit)}`, esc(n.city)],
+    (n) => [badge(n.urgency), `<strong>${esc(n.title)}</strong><span class="muted">${esc(n.category_name)}</span>`,
+      esc(n.ngo_name), `${n.remaining_quantity} ${esc(n.unit)}`, esc(n.city)],
     'No open needs right now.');
 }
 
@@ -89,6 +122,7 @@ document.getElementById('donation-form').addEventListener('submit', async (event
   event.target.reset();
   await loadDonations();
   showTab('donations');                          // show the new donation in the list
+  toast('Donation listed. Open “Details” to see which NGOs need it most.', 'success');
 });
 
 loadCategories('category');

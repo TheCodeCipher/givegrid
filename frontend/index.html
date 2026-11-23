@@ -10,8 +10,11 @@
 <body class="home">
   <header class="topbar">
     <a class="brand" href="index.html"><span class="brand-mark"><span></span><span></span><span></span><span></span></span>GiveGrid</a>
-    <a id="nav-login" class="button button-quiet" href="login.html">Log in</a>
-    <a id="nav-dashboard" class="button hidden" href="login.html">Your dashboard</a>
+    <!-- guest-only = shown when logged out; member-only = shown when logged in (home.js decides) -->
+    <a class="button button-quiet guest-only" href="login.html">Log in</a>
+    <span id="who" class="who member-only"></span>
+    <a id="nav-dashboard" class="button member-only" href="login.html">Your dashboard</a>
+    <button id="logout" class="button-quiet member-only" type="button">Log out</button>
   </header>
 
   <main>
@@ -23,21 +26,33 @@
           <p class="lead">Offices, hotels, event organisers and households list what they no longer need.
             Verified NGOs say what they are short of. GiveGrid ranks the matches and reserves exactly
             what is available, so no item is ever promised twice.</p>
-          <div class="actions">
-            <a class="button" href="login.html?mode=register&amp;role=DONOR">List items to give</a>
-            <a class="button button-quiet" href="login.html?mode=register&amp;role=NGO">Register an NGO</a>
+          <!-- Logged out: sign up or log in -->
+          <div class="guest-only">
+            <div class="actions">
+              <a class="button" href="login.html?mode=register&amp;role=DONOR">List items to give</a>
+              <a class="button button-quiet" href="login.html?mode=register&amp;role=NGO">Register an NGO</a>
+            </div>
+            <p class="login-line muted">Already have an account? <a href="login.html">Log in</a></p>
           </div>
-          <p class="login-line muted">Already have an account? <a href="login.html">Log in</a></p>
+          <!-- Logged in: shortcuts for this kind of account (filled in by home.js) -->
+          <div class="member-only welcome">
+            <p id="welcome-text"><strong>Welcome back.</strong></p>
+            <div class="actions">
+              <a id="shortcut-1" class="button" href="login.html">Your dashboard</a>
+              <a id="shortcut-2" class="button button-quiet" href="login.html">More</a>
+            </div>
+          </div>
         </div>
 
         <figure class="unit-grid">
           <div id="squares" class="squares" aria-hidden="true"></div>
-          <figcaption>One donation of <strong>100 office chairs</strong>, split between three NGOs.
-            Each square is one chair. Nobody can claim the 101st.</figcaption>
+          <figcaption><strong>Example:</strong> a hotel lists <strong>100 chairs</strong>. Each square is one chair.
+            Two NGOs claim 40 each. A third asks for 30, but only 20 are left, so GiveGrid
+            <strong>offers it the last 20</strong> instead of promising chairs that don't exist.</figcaption>
           <ul class="legend">
-            <li><span class="key a"></span>Asha Learning Centre, 40</li>
-            <li><span class="key b"></span>Nayi Disha Shelter, 40</li>
-            <li><span class="key c"></span>Green Sprouts School, 20</li>
+            <li><span class="key a"></span>Asha Learning Centre: claimed 40</li>
+            <li><span class="key b"></span>Nayi Disha Shelter: claimed 40</li>
+            <li><span class="key c"></span>Green Sprouts School: asked for 30, got the last 20</li>
           </ul>
         </figure>
       </div>
@@ -67,7 +82,7 @@
             <li>One donation can go to several NGOs</li>
             <li>Record the handover when it is collected</li>
           </ul>
-          <a class="button" href="login.html?mode=register&amp;role=DONOR">Create a donor account</a>
+          <a class="button guest-only" href="login.html?mode=register&amp;role=DONOR">Create a donor account</a>
         </div>
         <div class="side ngo">
           <h2>For NGOs</h2>
@@ -77,7 +92,7 @@
             <li>Claim exactly the quantity you can use</li>
             <li>Every NGO is checked by an administrator first</li>
           </ul>
-          <a class="button" href="login.html?mode=register&amp;role=NGO">Register your NGO</a>
+          <a class="button guest-only" href="login.html?mode=register&amp;role=NGO">Register your NGO</a>
         </div>
       </div>
     </section>

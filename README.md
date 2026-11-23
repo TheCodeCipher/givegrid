@@ -49,6 +49,12 @@ Needs Node.js 18+ and MySQL 8 **or** MariaDB 10.5+. Tested with MySQL 8 and Mari
 Demo logins (password `password123`): `donor@givegrid.local`, `ngo@givegrid.local`,
 `admin@givegrid.local`. An unverified NGO: `ngo10@givegrid.local`.
 
+> **The demo accounts and data only exist after `npm run seed` (step 4).** Without it the site
+> runs but is empty, and the demo logins fail with "Wrong email or password".
+> `npm run seed` **empties the `givegrid` database first**, then loads the demo data, so run it
+> again whenever you want a fresh demo. It never touches `givegrid_test` (the tests' database).
+> On a deployed copy, run it once with `.env` pointing at the cloud database.
+
 ## Folder map
 
 ```text

@@ -1,7 +1,8 @@
 /* =====================================================================
    style.css — the only stylesheet. Plain CSS, no framework.
    Sections: 1 fonts and colours · 2 base · 3 top bar · 4 buttons and forms
-             5 home page · 6 app pages (tabs, panels, tables) · 7 small screens
+             5 home page · 6 app pages (tabs, panels, tables)
+             6b dashboard helpers (overview, filters, progress, toast) · 7 small screens
    ===================================================================== */
 
 /* ---------- 1. Fonts (stored in /fonts, so no outside website is needed) ---------- */
@@ -36,7 +37,9 @@
 
 /* ---------- 2. Base ---------- */
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+/* scrollbar-gutter: always keep room for the scrollbar, so the page doesn't shift sideways
+   when a list grows long enough to need one (one cause of the flicker). */
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }
 body { margin: 0; font-family: var(--body); font-size: 1rem; line-height: 1.55; color: var(--ink); background: var(--paper); }
 h1, h2, h3 { font-family: var(--heading); line-height: 1.15; margin: 0 0 0.5rem; letter-spacing: -0.01em; }
 h1 { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 800; }
@@ -47,6 +50,9 @@ a { color: var(--leaf); }
 a:hover { color: var(--leaf-dark); }
 :focus-visible { outline: 3px solid var(--marigold); outline-offset: 2px; }   /* visible keyboard focus */
 .hidden { display: none !important; }
+/* Home page: guest-only parts are for logged-out visitors, member-only parts for logged-in ones.
+   home.js adds the class "signed-in" to <body> when someone is logged in. */
+.signed-in .guest-only, body:not(.signed-in) .member-only { display: none !important; }
 .muted { color: var(--muted); font-size: 0.92rem; }
 
 /* Message states used everywhere: loading / empty / error / success / notice. */
@@ -188,12 +194,98 @@ td { font-variant-numeric: tabular-nums; }
 .offer { background: var(--marigold-soft); border: 1px solid #f0cf94; border-radius: 8px; padding: 0.9rem; }
 .offer p { margin-bottom: 0.75rem; }
 
+/* ---------- 6b. Dashboard helpers: overview, filters, progress, messages ---------- */
+/* Smaller buttons inside tables, so rows stay short. */
+button.button-small, .button.button-small { padding: 0.35rem 0.75rem; font-size: 0.9rem; }
+
+/* Overview numbers at the top of a dashboard. Each one is a button. */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.25rem; }
+.stat { display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem; text-align: left;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.85rem 1rem; }
+.stat:hover { background: var(--leaf-soft); color: var(--ink); border-color: var(--leaf); }
+.stat strong { font-family: var(--heading); font-size: 1.8rem; font-weight: 800; line-height: 1; color: var(--leaf); }
+.stat span { font-weight: 400; font-size: 0.9rem; color: var(--muted); }
+.stat-turn { border-left: 4px solid var(--marigold); }
+.stat-turn strong { color: #8a5d00; }
+
+/* Filter buttons above a list ("Your turn 3", "Finished 5"...). */
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.9rem; }
+.chip { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 0.3rem 0.85rem; font-size: 0.9rem; }
+.chip:hover { background: var(--leaf-soft); color: var(--ink); border-color: var(--leaf); }
+.chip.active { background: var(--leaf); color: #fff; border-color: var(--leaf); }
+.chip span { display: inline-block; min-width: 1.3rem; margin-left: 0.25rem; text-align: center; font-variant-numeric: tabular-nums; opacity: 0.85; }
+
+/* Long lists scroll inside their own box (column titles stay visible),
+   instead of making the whole page very long. */
+.table-scroll { max-height: 62vh; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.table-scroll table { border: none; border-radius: 0; }
+.table-scroll thead th { position: sticky; top: 0; z-index: 1; }
+tr.chosen td { background: var(--leaf-soft); }
+tr.chosen .tag { background: var(--surface); }
+.loading { padding: 1.5rem 0; }
+
+/* Claim progress: five small steps, finished ones filled in. */
+.tracker { list-style: none; display: flex; gap: 3px; padding: 0; margin: 0 0 0.35rem; }
+.tracker li { flex: 1; min-width: 0; padding-top: 0.4rem; border-top: 4px solid #dfe6e0; font-size: 0.72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tracker li.done { border-top-color: var(--leaf); }
+.tracker li.current { border-top-color: var(--marigold); color: var(--ink); font-weight: 700; }
+.next { display: block; font-size: 0.9rem; }
+
+/* Progress bars (<progress>): how much of a need or donation is taken. */
+progress { width: 100%; max-width: 220px; height: 0.55rem; display: block; margin: 0.25rem 0 0.2rem;
+  appearance: none; border: none; border-radius: 999px; background: #dfe6e0; overflow: hidden; accent-color: var(--leaf); }
+progress::-webkit-progress-bar { background: #dfe6e0; border-radius: 999px; }
+progress::-webkit-progress-value { background: var(--leaf); border-radius: 999px; }
+progress::-moz-progress-bar { background: var(--leaf); border-radius: 999px; }
+.page-head progress { max-width: 360px; }
+
+/* Numbered "how it works" steps (claiming page) and onboarding steps (new NGO). */
+.howto, .onboarding { list-style: none; counter-reset: how; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; padding: 0; margin: 0 0 1.25rem; }
+.howto li, .onboarding li { counter-increment: how; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid #dfe6e0;
+  border-radius: var(--radius); padding: 0.7rem 0.9rem; font-size: 0.92rem; color: var(--muted); }
+.howto li::before, .onboarding li::before { content: counter(how) ". "; font-weight: 700; }
+.howto li strong { color: var(--ink); }
+.howto li.current, .onboarding li.current { border-top-color: var(--marigold); color: var(--ink); }
+.howto li.done, .onboarding li.done { border-top-color: var(--leaf); }
+.onboarding li.done::after { content: " ✓"; color: var(--leaf); font-weight: 700; }
+
+/* Why a donation ranks where it does. */
+.score { font-family: var(--heading); font-size: 1.3rem; }
+.tags { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.2rem; }
+.tag { font-size: 0.75rem; padding: 0.05rem 0.45rem; border-radius: 999px; background: #e6ebe7; color: var(--muted); white-space: nowrap; }
+.tag-good { background: var(--leaf-soft); color: var(--leaf-dark); }
+
+/* The claim panel keeps one height, so switching its content doesn't make things jump. */
+.claim-panel { min-height: 340px; }
+/* Three facts as rows: label on the left, number on the right. */
+.facts { margin: 0; background: var(--paper); border-radius: 8px; padding: 0.3rem 0.8rem; }
+.facts div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.35rem 0; border-bottom: 1px solid var(--line); }
+.facts div:last-child { border-bottom: none; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.facts div:last-child dd { color: var(--leaf); }
+
+/* Home page welcome for logged-in visitors. */
+.welcome p { font-size: 1.1rem; }
+
+/* The floating result message ("toast"). It floats over the page, so it never moves anything. */
+.toast { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 50; max-width: min(420px, calc(100vw - 2.5rem));
+  padding: 0.8rem 1rem; border-radius: 10px; box-shadow: 0 6px 24px rgba(23, 48, 43, 0.18);
+  opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 0.2s, transform 0.2s; }
+.toast.show { opacity: 1; transform: none; }
+
+/* More status colours: a need that is fully covered. */
+.owner .panel-title { display: none; }   /* donation page: the tab already says "History" */
+.badge-covered { background: var(--leaf-soft); color: var(--leaf-dark); }
+
 /* ---------- 7. Small screens ---------- */
 @media (max-width: 900px) {
   .hero .wrap, .sides .wrap, .split { grid-template-columns: 1fr; }
   .steps { grid-template-columns: 1fr 1fr; }
   .promises .list { grid-template-columns: 1fr; gap: 1rem; }
   .split .side-panel { position: static; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .claim-panel { min-height: 0; }
 }
 
 /* Phones: each table row becomes a small card, with the column name above each value. */
@@ -208,9 +300,15 @@ td { font-variant-numeric: tabular-nums; }
   td { border: none; padding: 0.35rem 0.9rem; }
   td::before { content: attr(data-label); display: block; font-size: 0.8rem; font-weight: 700; color: var(--muted); }
   td[data-label=""]::before { display: none; }
+  /* On phones the rows are cards, so the page scrolls normally (no inner scroll box). */
+  .table-scroll { max-height: none; overflow: visible; border: none; background: transparent; }
+  .howto, .onboarding { grid-template-columns: 1fr; }
+  .tracker li { font-size: 0; }                 /* only the coloured bars, no labels... */
+  .tracker li.current { font-size: 0.72rem; }   /* ...except the current step */
 }
 
 /* People who turn off animations in their system settings get none. */
 @media (prefers-reduced-motion: reduce) {
   .square.a, .square.b, .square.c { animation: none; }
+  .toast { transition: none; }
 }
