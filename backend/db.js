@@ -19,6 +19,7 @@ const pool = mysql.createPool({
   password: config.db.appPassword,
   database: config.isTest ? config.db.testName : config.db.name,
   connectionLimit: 10,
+  ssl: config.db.ssl,               // encrypted in the cloud, plain on the laptop
 });
 
 // ---------------------------------------------------------------------

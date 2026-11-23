@@ -173,6 +173,8 @@ if (require.main === module) {
     const conn = await mysql.createConnection({
       host: config.db.host, port: config.db.port,
       user: config.db.adminUser, password: config.db.adminPassword, database: config.db.name,
+      ssl: config.db.ssl,
+
     });
     console.table(await seedData(conn));
     console.log(`Demo logins (password "${PASSWORD}"): admin@givegrid.local, donor@givegrid.local, ngo@givegrid.local`);

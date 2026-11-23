@@ -31,15 +31,16 @@ async function main() {
     user: config.db.adminUser,
     password: config.db.adminPassword,
     multipleStatements: true,
+    ssl: config.db.ssl,
   });
 
   const schema = fs.readFileSync(path.join(__dirname, '..', 'database', 'schema.sql'), 'utf8');
   const appUser = config.db.appUser;
-
+  const appHost = config.db.appHost;
   // Step 2: create the app account (or reset its password if it exists).
   // The ? are filled in safely by mysql2 (same as in every other query).
-  await admin.query("CREATE USER IF NOT EXISTS ?@'localhost' IDENTIFIED BY ?", [appUser, config.db.appPassword]);
-  await admin.query("ALTER USER ?@'localhost' IDENTIFIED BY ?", [appUser, config.db.appPassword]);
+  await admin.query("CREATE USER IF NOT EXISTS ?@? IDENTIFIED BY ?", [appUser, appHost, config.db.appPassword]);
+  await admin.query("ALTER USER ?@? IDENTIFIED BY ?", [appUser, appHost, config.db.appPassword]);
 
   for (const dbName of [config.db.name, config.db.testName]) {
     // Step 3a: brand-new empty database.
@@ -52,13 +53,13 @@ async function main() {
 
     // Step 3c: LEAST PRIVILEGE. The app gets only what it needs.
     for (const table of NORMAL_TABLES) {
-      await admin.query(`GRANT SELECT, INSERT, UPDATE ON \`${dbName}\`.${table} TO ?@'localhost'`, [appUser]);
+      await admin.query(`GRANT SELECT, INSERT, UPDATE ON \`${dbName}\`.${table} TO ?@?`, [appUser, appHost]);
     }
     // Categories are fixed reference data: read only.
-    await admin.query(`GRANT SELECT ON \`${dbName}\`.categories TO ?@'localhost'`, [appUser]);
+    await admin.query(`GRANT SELECT ON \`${dbName}\`.categories TO ?@?`, [appUser, appHost]);
     // History: read and ADD only. No UPDATE, no DELETE, no DROP (DROP is what
     // TRUNCATE needs in MySQL). This is layer 2 of "append-only".
-    await admin.query(`GRANT SELECT, INSERT ON \`${dbName}\`.donation_events TO ?@'localhost'`, [appUser]);
+    await admin.query(`GRANT SELECT, INSERT ON \`${dbName}\`.donation_events TO ?@?`, [appUser, appHost]);
 
     console.log(`Created database "${dbName}" with 7 tables`);
   }

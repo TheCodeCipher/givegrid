@@ -33,5 +33,9 @@ module.exports = {
     appPassword: process.env.DB_APP_PASSWORD,
     adminUser: process.env.DB_ADMIN_USER,
     adminPassword: process.env.DB_ADMIN_PASSWORD,
+    // DB_SSL=true in the cloud: Azure only accepts encrypted (TLS) connections.
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : undefined,
+    // Where givegrid_app may log in FROM. Laptop: 'localhost'. Cloud: '%' (any address).
+    appHost: process.env.DB_APP_HOST || 'localhost',
   },
 };
