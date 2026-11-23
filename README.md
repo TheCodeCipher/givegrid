@@ -110,4 +110,4 @@ Left out on purpose to keep the scope focused (agreed after the feedback on our 
 8. Rebuilding past state from history at any moment; hash-chained history.
 9. Fraud detection or ID checks beyond the admin verifying NGOs.
 10. Returns or disputes after pickup.
-11. Mobile apps, microservices, GraphQL, NoSQL, AI/ML, deployment.
+11. Mobile apps, microservices, GraphQL, NoSQL, AI/ML.

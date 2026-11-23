@@ -5,6 +5,7 @@
 // send requests to it directly, without starting a real server.
 //
 // A request passes through these in ORDER (top to bottom):
+//   0. trust proxy      (cloud only) read the visitor's real IP
 //   1. securityHeaders  adds safety headers to every reply
 //   2. express.json()   turns the JSON body into req.body (max 10 kB)
 //   3. express.static   serves the frontend files (HTML/CSS/JS)
@@ -18,12 +19,18 @@ const express = require('express');
 const { pool } = require('./db');
 const { HttpError, asyncHandler } = require('./errors');
 const { securityHeaders } = require('./security');
+const config = require('./config');
 
 const app = express();
 
-// Railway (and any host) puts a proxy in front of us. Trust ONE hop,
-// so req.ip is the visitor's real IP (from X-Forwarded-For), not the proxy's.
-app.set('trust proxy', 1);
+// On Railway a proxy sits in front of us, so every request seems to come from
+// the proxy. TRUST_PROXY=true tells Express to trust ONE hop: req.ip becomes the
+// visitor's real IP, read from the X-Forwarded-For header the proxy adds.
+// It stays OFF on the laptop: with no proxy, anyone could send a fake
+// X-Forwarded-For and get a new "IP" for every guess, dodging the login limiter.
+if (config.trustProxy) {
+  app.set('trust proxy', 1);
+}
 
 // Don't advertise "X-Powered-By: Express" (tells attackers what to target).
 app.disable('x-powered-by');

@@ -68,6 +68,7 @@ file because each handler is only a few lines.
   called `listen`, every test file would try to grab port 3000 and the tests would clash and not exit.
 
 **Middleware order in `app.js` (order matters: first match wins):**
+0. `trust proxy` (only when `TRUST_PROXY=true`, i.e. on Railway): `req.ip` = the visitor's real IP, not the proxy's.
 1. `app.disable('x-powered-by')` and `securityHeaders`: safety headers on every reply (`security.js`).
 2. `express.json({ limit: '10kb' })`: reads JSON bodies into `req.body`. Broken JSON → 400; a body over 10 kB → 413.
 3. `express.static('frontend')`: if the URL is a file in `frontend/` (e.g. `/donor.html`), send it.

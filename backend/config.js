@@ -24,6 +24,8 @@ module.exports = {
   isTest: process.env.NODE_ENV === 'test',
   port: process.env.PORT || 3000,
   jwtSecret: process.env.JWT_SECRET,
+  // true only when deployed behind a proxy (Railway). See app.js.
+  trustProxy: process.env.TRUST_PROXY === 'true',
   db: {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT || 3306),
@@ -33,7 +35,8 @@ module.exports = {
     appPassword: process.env.DB_APP_PASSWORD,
     adminUser: process.env.DB_ADMIN_USER,
     adminPassword: process.env.DB_ADMIN_PASSWORD,
-    // DB_SSL=true in the cloud: Azure only accepts encrypted (TLS) connections.
+    // DB_SSL=true makes the connection to MySQL encrypted (TLS). Use it when the
+    // cloud database asks for it. Off on the laptop (MySQL is on the same machine).
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : undefined,
     // Where givegrid_app may log in FROM. Laptop: 'localhost'. Cloud: '%' (any address).
     appHost: process.env.DB_APP_HOST || 'localhost',
